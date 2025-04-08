@@ -295,7 +295,8 @@ export const withFeaturedItem =
 									dangerouslySetInnerHTML={ {
 										__html:
 											category?.description ||
-											product?.short_description,
+											product?.short_description ||
+											product?.description,
 									} }
 								/>
 							) }
