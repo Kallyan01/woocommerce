@@ -294,8 +294,8 @@ export const withFeaturedItem =
 									className={ `${ className }__description` }
 									dangerouslySetInnerHTML={ {
 										__html:
-											category?.description ||
-											product?.short_description,
+											product?.short_description ||
+											product?.description,
 									} }
 								/>
 							) }
