@@ -297,10 +297,12 @@ export const withFeaturedItem =
 										__html:
 											category?.description ||
 											product?.short_description ||
-											getLongTextPreview(
-												product?.description,
-												400
-											),
+											( product?.description?.length > 0
+												? getLongTextPreview(
+														product.description,
+														400
+												  )
+												: '' ),
 									} }
 								/>
 							) }

@@ -93,11 +93,11 @@ export function dimRatioToClass( ratio: number ) {
 }
 
 /**
- * Convert long texts into short preview format with trailing dots .
+ * Convert long texts into short preview format with trailing dots.
  *
- * @param text   store the the long string .
- * @param length preview text's length .
- * @return The class name, if applicable (not used for ratio 0 or 50).
+ * @param {string} text   store the the long string.
+ * @param {number} length preview text's length.
+ * @return {string} The truncated preview text.
  */
 export function getLongTextPreview( text: string, length: number ): string {
 	return text.slice( 0, length ) + ( +text.length > length ? '...' : '' );
