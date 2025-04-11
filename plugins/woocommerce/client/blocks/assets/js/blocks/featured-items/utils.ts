@@ -91,3 +91,14 @@ export function dimRatioToClass( ratio: number ) {
 		? null
 		: `has-background-dim-${ 10 * Math.round( ratio / 10 ) }`;
 }
+
+/**
+ * Convert long texts into short preview format with trailing dots .
+ *
+ * @param text   store the the long string .
+ * @param length preview text's length .
+ * @return The class name, if applicable (not used for ratio 0 or 50).
+ */
+export function getLongTextPreview( text: string, length: number ): string {
+	return text.slice( 0, length ) + ( +text.length > length ? '...' : '' );
+}

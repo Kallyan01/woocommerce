@@ -23,6 +23,7 @@ import {
 	dimRatioToClass,
 	getBackgroundImageStyles,
 	getClassPrefixFromName,
+	getLongTextPreview,
 } from './utils';
 
 interface WithFeaturedItemConfig extends GenericBlockUIConfig {
@@ -296,7 +297,10 @@ export const withFeaturedItem =
 										__html:
 											category?.description ||
 											product?.short_description ||
-											product?.description,
+											getLongTextPreview(
+												product?.description,
+												400
+											),
 									} }
 								/>
 							) }
