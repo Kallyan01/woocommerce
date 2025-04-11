@@ -234,6 +234,21 @@ export const withFeaturedItem =
 				backgroundColor: overlayColor,
 			};
 
+			useEffect(() => {
+				console.log(
+					document.getElementsByClassName(
+						`wc-block-featured-product`
+					)[ 0 ].clientWidth
+				);
+
+				console.log(
+					document.getElementsByClassName(
+						`wc-block-featured-product`
+					)[ 0 ].clientHeight
+				);
+			}, [])
+			
+
 			return (
 				<>
 					<ConstrainedResizable
@@ -242,7 +257,10 @@ export const withFeaturedItem =
 						showHandle={ isSelected }
 						style={ { minHeight } }
 					/>
-					<div className={ containerClass } style={ containerStyle }>
+					<div
+						className={ `${ containerClass } featured-product-parent` }
+						style={ containerStyle }
+					>
 						<div className={ `${ className }__wrapper` }>
 							<div
 								className="background-dim__overlay"
@@ -256,11 +274,89 @@ export const withFeaturedItem =
 										src={ backgroundImageSrc }
 										style={ backgroundImageStyle }
 										onLoad={ ( e ) => {
+											const img = e.currentTarget;
+
+											// Set dimensions
+											const width = img.naturalWidth;
+											const height = img.naturalHeight;
+
+											console.log(
+												document.getElementsByClassName(
+													`wc-block-featured-product`
+												)[ 0 ].clientWidth
+											);
+
+											console.log(
+												document.getElementsByClassName(
+													`wc-block-featured-product`
+												)[ 0 ].clientHeight
+											);
+
+											// console.log(
+											// 	document.getElementsByClassName(
+											// 		containerClass.split(
+											// 			' '
+											// 		)[ 0 ]
+											// 	)[ 0 ].clientWidth
+											// );
+
+											console.log( `width : ${ width }` );
+											console.log(
+												`height : ${ height }`
+											);
+
+											// Create a canvas element
+											const canvas =
+												document.createElement(
+													'canvas'
+												);
+											canvas.width = width;
+											canvas.height = height;
+
+											// Draw the image on the canvas element
+											const ctx =
+												canvas.getContext( '2d' );
+											if ( ! ctx ) return;
+
+											ctx.drawImage(
+												img,
+												0,
+												0,
+												width,
+												height
+											);
+											const imageData = ctx.getImageData(
+												0,
+												0,
+												width,
+												height
+											).data;
+
+											// Check for any transparent pixels on
+											console.log(imageData.length)
+											let hasTransparency = false;
+											for (
+												let i = 3;
+												i < imageData.length;
+												i += 4
+											) {
+												if ( imageData[ i ] < 255 ) {
+													hasTransparency = true;
+													break;
+												}
+											}
+
+											// Log or handle the transparency
+											console.log(
+												'Image transparency detected:',
+												hasTransparency
+											);
+
+											// Optional: update component state or call a handler
 											setBackgroundImageSize( {
-												height: e.currentTarget
-													?.naturalHeight,
-												width: e.currentTarget
-													?.naturalWidth,
+												width,
+												height,
+												hasTransparency,
 											} );
 										} }
 									/>
