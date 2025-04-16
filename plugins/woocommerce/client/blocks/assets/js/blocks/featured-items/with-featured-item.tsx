@@ -4,10 +4,11 @@
  * External dependencies
  */
 import type { BlockAlignment } from '@wordpress/blocks';
+import { dispatch } from '@wordpress/data';
 import { ProductResponseItem, isEmpty } from '@woocommerce/types';
 import { Icon, Placeholder, Spinner } from '@wordpress/components';
 import clsx from 'clsx';
-import { useCallback, useState } from '@wordpress/element';
+import { useCallback, useState, useEffect } from '@wordpress/element';
 import { WP_REST_API_Category } from 'wp-types';
 import { useStyleProps } from '@woocommerce/base-hooks';
 import type { ComponentType, Dispatch, SetStateAction } from 'react';
@@ -113,16 +114,69 @@ export const withFeaturedItem =
 			product,
 			setAttributes,
 		} = props;
-		const { mediaId, mediaSrc } = attributes;
+		const { mediaId, mediaSrc, isRepeated, imageFit, backgroundColor } =
+			attributes;
 		const item = category || product;
 		const [ backgroundImageSize, setBackgroundImageSize ] = useState( {} );
 
-		const { backgroundImageSrc } = useBackgroundImage( {
+		const {
+			backgroundImageSrc,
+			setFeaturedProductParentDivDimensions,
+			backgroundColorVisibility,
+		} = useBackgroundImage( {
 			item,
 			mediaId,
 			mediaSrc,
 			blockName: name,
+			blockAttributes: { isRepeated, imageFit },
 		} );
+
+		useEffect( () => {
+			// Observes the resizable block's dimension changes.
+			const observer = new ResizeObserver( ( entries ) => {
+				setFeaturedProductParentDivDimensions( {
+					height: entries[ 0 ].contentRect.height,
+					width: entries[ 0 ].contentRect.width,
+				} );
+			} );
+
+			if ( isLoading === false ) {
+				const element = document
+					?.getElementsByTagName( 'iframe' )[ 0 ]
+					?.contentWindow?.document.querySelector(
+						'.wc-block-featured-product'
+					) as HTMLElement | null;
+
+				if ( ! element ) return;
+
+				observer.observe( element );
+			}
+
+			return () => observer.disconnect();
+		}, [ isLoading ] );
+
+		useEffect( () => {
+			if (
+				! backgroundColorVisibility &&
+				backgroundColor &&
+				! isLoading
+			) {
+				dispatch( 'core/notices' ).createNotice(
+					'warning',
+					'The color set as background may not be visible due to image dimensions',
+					{
+						id: 'bg-image-color-warning',
+						isDismissible: true,
+					}
+				);
+			}
+
+			return () => {
+				dispatch( 'core/notices' ).removeNotice(
+					'bg-image-color-warning'
+				);
+			};
+		}, [ backgroundColorVisibility, isLoading, backgroundColor ] );
 
 		const className = getClassPrefixFromName( name );
 
@@ -181,8 +235,6 @@ export const withFeaturedItem =
 				dimRatio,
 				focalPoint,
 				hasParallax,
-				isRepeated,
-				imageFit,
 				minHeight,
 				overlayColor,
 				overlayGradient,
@@ -234,21 +286,6 @@ export const withFeaturedItem =
 				backgroundColor: overlayColor,
 			};
 
-			useEffect(() => {
-				console.log(
-					document.getElementsByClassName(
-						`wc-block-featured-product`
-					)[ 0 ].clientWidth
-				);
-
-				console.log(
-					document.getElementsByClassName(
-						`wc-block-featured-product`
-					)[ 0 ].clientHeight
-				);
-			}, [])
-			
-
 			return (
 				<>
 					<ConstrainedResizable
@@ -275,88 +312,14 @@ export const withFeaturedItem =
 										style={ backgroundImageStyle }
 										onLoad={ ( e ) => {
 											const img = e.currentTarget;
-
 											// Set dimensions
 											const width = img.naturalWidth;
 											const height = img.naturalHeight;
-
-											console.log(
-												document.getElementsByClassName(
-													`wc-block-featured-product`
-												)[ 0 ].clientWidth
-											);
-
-											console.log(
-												document.getElementsByClassName(
-													`wc-block-featured-product`
-												)[ 0 ].clientHeight
-											);
-
-											// console.log(
-											// 	document.getElementsByClassName(
-											// 		containerClass.split(
-											// 			' '
-											// 		)[ 0 ]
-											// 	)[ 0 ].clientWidth
-											// );
-
-											console.log( `width : ${ width }` );
-											console.log(
-												`height : ${ height }`
-											);
-
-											// Create a canvas element
-											const canvas =
-												document.createElement(
-													'canvas'
-												);
-											canvas.width = width;
-											canvas.height = height;
-
-											// Draw the image on the canvas element
-											const ctx =
-												canvas.getContext( '2d' );
-											if ( ! ctx ) return;
-
-											ctx.drawImage(
-												img,
-												0,
-												0,
-												width,
-												height
-											);
-											const imageData = ctx.getImageData(
-												0,
-												0,
-												width,
-												height
-											).data;
-
-											// Check for any transparent pixels on
-											console.log(imageData.length)
-											let hasTransparency = false;
-											for (
-												let i = 3;
-												i < imageData.length;
-												i += 4
-											) {
-												if ( imageData[ i ] < 255 ) {
-													hasTransparency = true;
-													break;
-												}
-											}
-
-											// Log or handle the transparency
-											console.log(
-												'Image transparency detected:',
-												hasTransparency
-											);
 
 											// Optional: update component state or call a handler
 											setBackgroundImageSize( {
 												width,
 												height,
-												hasTransparency,
 											} );
 										} }
 									/>
