@@ -131,6 +131,8 @@ export const withFeaturedItem =
 			blockAttributes: { isRepeated, imageFit },
 		} );
 
+		const blockName = name==='woocommerce/featured-category' ? 'Featured Category' : 'Featured Product';
+
 		useEffect( () => {
 			// Observes the resizable block's dimension changes.
 			const observer = new ResizeObserver( ( entries ) => {
@@ -144,7 +146,7 @@ export const withFeaturedItem =
 				const element = document
 					?.getElementsByTagName( 'iframe' )[ 0 ]
 					?.contentWindow?.document.querySelector(
-						'.wc-block-featured-product'
+						'.featured-product-parent'
 					) as HTMLElement | null;
 
 				if ( ! element ) return;
@@ -163,9 +165,9 @@ export const withFeaturedItem =
 			) {
 				dispatch( 'core/notices' ).createNotice(
 					'warning',
-					'The color set as background may not be visible due to image dimensions',
+					`${blockName} block’s background color may not be visible if the product has a non-transparent image or if the selected non-transparent image fully covers the block`,
 					{
-						id: 'bg-image-color-warning',
+						id: `${name}-bg-image-color-warning`,
 						isDismissible: true,
 					}
 				);
@@ -173,7 +175,7 @@ export const withFeaturedItem =
 
 			return () => {
 				dispatch( 'core/notices' ).removeNotice(
-					'bg-image-color-warning'
+					`${name}-bg-image-color-warning`
 				);
 			};
 		}, [ backgroundColorVisibility, isLoading, backgroundColor ] );
