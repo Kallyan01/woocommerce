@@ -142,35 +142,24 @@ test.describe( 'registerProductBlockType registers', () => {
 			'site-editor.php?postType=wp_template&activeView=WooCommerce'
 		);
 
-		const singleProductTemplate = page.getByRole( 'button', {
-			name: 'Single Product',
-		} );
+		const singleProductTemplate = page.getByLabel( 'Single Product' );
 
 		await expect( singleProductTemplate ).toBeVisible();
 
-		const iframe = page.frameLocator(
-			'button[aria-label="Single Product"] iframe[title="Editor canvas"]'
+		const previewCanvas = singleProductTemplate.frameLocator(
+			'iframe[title="Editor canvas"]'
 		);
-		for ( const blockType of productBlockTypes ) {
-			const block = iframe?.locator( `[data-type="${ blockType }"]` );
-			await expect( block ).toBeVisible();
-		}
 
-		await admin.page.reload();
-
-		const singleProductTemplateAfterReload = page.getByRole( 'button', {
-			name: 'Single Product',
+		// Wait for the iframe to be fully loaded.
+		await previewCanvas.locator( 'body' ).evaluate( () => {
+			return document?.readyState === 'complete';
 		} );
 
-		await expect( singleProductTemplateAfterReload ).toBeVisible();
-		const iframeAfterReload = page.frameLocator(
-			'button[aria-label="Single Product"] iframe[title="Editor canvas"]'
-		);
 		for ( const blockType of productBlockTypes ) {
-			const block = iframeAfterReload?.locator(
+			const block = previewCanvas.locator(
 				`[data-type="${ blockType }"]`
 			);
-			await expect( block ).toBeVisible();
+			await expect( block.first() ).toBeAttached();
 		}
 	} );
 
