@@ -313,15 +313,11 @@ export const withFeaturedItem =
 										src={ backgroundImageSrc }
 										style={ backgroundImageStyle }
 										onLoad={ ( e ) => {
-											const img = e.currentTarget;
-											// Set dimensions
-											const width = img.naturalWidth;
-											const height = img.naturalHeight;
-
-											// Optional: update component state or call a handler
 											setBackgroundImageSize( {
-												width,
-												height,
+												height: e.currentTarget
+													?.naturalHeight,
+												width: e.currentTarget
+													?.naturalWidth,
 											} );
 										} }
 									/>
