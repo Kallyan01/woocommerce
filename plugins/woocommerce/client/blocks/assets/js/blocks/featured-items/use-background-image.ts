@@ -149,13 +149,12 @@ export function useBackgroundImage( {
 			setBackgroundColorVisibility( false );
 		}
 
-		// Checks if bg-image is not transparent and repeated all-over parent div.
-		if ( ! isImageBgTransparent && blockAttributes?.isRepeated ) {
-			setBackgroundColorVisibility( false );
-		}
-
-		// Checks if bg-image is not transparent and covers whole parent div.
-		if ( ! isImageBgTransparent && blockAttributes?.imageFit === 'cover' ) {
+		// Checks if bg-image is not transparent and repeated all-over parent div or covers available parent div space.
+		if (
+			! isImageBgTransparent &&
+			( blockAttributes?.isRepeated ||
+				blockAttributes?.imageFit === 'cover' )
+		) {
 			setBackgroundColorVisibility( false );
 		}
 	}, [
