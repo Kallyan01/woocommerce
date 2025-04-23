@@ -31,6 +31,7 @@ interface BgImageDimensions {
 	height: number;
 	width: number;
 }
+
 interface BackgroundImage {
 	backgroundImageId: number;
 	backgroundImageSrc: string;

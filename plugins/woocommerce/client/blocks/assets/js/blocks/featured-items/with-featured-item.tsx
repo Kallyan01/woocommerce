@@ -47,6 +47,7 @@ export interface FeaturedItemRequiredAttributes {
 	showDesc: boolean;
 	showPrice: boolean;
 	editMode: boolean;
+	backgroundColor: string;
 }
 
 interface FeaturedCategoryRequiredAttributes
@@ -131,7 +132,10 @@ export const withFeaturedItem =
 			blockAttributes: { isRepeated, imageFit },
 		} );
 
-		const blockName = name==='woocommerce/featured-category' ? 'Featured Category' : 'Featured Product';
+		const blockName =
+			name === 'woocommerce/featured-category'
+				? 'Featured Category'
+				: 'Featured Product';
 
 		useEffect( () => {
 			// Observes the resizable block's dimension changes.
@@ -165,9 +169,9 @@ export const withFeaturedItem =
 			) {
 				dispatch( 'core/notices' ).createNotice(
 					'warning',
-					`${blockName} block’s background color may not be visible if the product has a non-transparent image or if the selected non-transparent image fully covers the block`,
+					`${ blockName } block's background color may not be visible if the product has a non-transparent image or if the selected non-transparent image fully covers the block`,
 					{
-						id: `${name}-bg-image-color-warning`,
+						id: `${ name }-bg-image-color-warning`,
 						isDismissible: true,
 					}
 				);
@@ -175,7 +179,7 @@ export const withFeaturedItem =
 
 			return () => {
 				dispatch( 'core/notices' ).removeNotice(
-					`${name}-bg-image-color-warning`
+					`${ name }-bg-image-color-warning`
 				);
 			};
 		}, [ backgroundColorVisibility, isLoading, backgroundColor ] );
