@@ -12,6 +12,7 @@ import { useCallback, useState, useEffect } from '@wordpress/element';
 import { WP_REST_API_Category } from 'wp-types';
 import { useStyleProps } from '@woocommerce/base-hooks';
 import type { ComponentType, Dispatch, SetStateAction } from 'react';
+import { trimCharacters } from '@woocommerce/utils';
 
 /**
  * Internal dependencies
@@ -356,7 +357,14 @@ export const withFeaturedItem =
 									dangerouslySetInnerHTML={ {
 										__html:
 											category?.description ||
-											product?.short_description,
+											product?.short_description ||
+											// Returning max 400 character to match the frontend block logic in PHP: see https://github.com/woocommerce/woocommerce/blob/027bf00f291967608abbbd6408193c970dffdd2a/plugins/woocommerce/src/Blocks/BlockTypes/FeaturedProduct.php#L88
+											( product?.description?.length > 0
+												? trimCharacters(
+														product.description,
+														400
+												  )
+												: '' ),
 									} }
 								/>
 							) }
