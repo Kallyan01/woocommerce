@@ -8,7 +8,7 @@ import { dispatch } from '@wordpress/data';
 import { ProductResponseItem, isEmpty } from '@woocommerce/types';
 import { Icon, Placeholder, Spinner } from '@wordpress/components';
 import clsx from 'clsx';
-import { useCallback, useState, useEffect } from '@wordpress/element';
+import { useCallback, useState, useEffect, useRef } from '@wordpress/element';
 import { WP_REST_API_Category } from 'wp-types';
 import { useStyleProps } from '@woocommerce/base-hooks';
 import type { ComponentType, Dispatch, SetStateAction } from 'react';
@@ -49,6 +49,7 @@ export interface FeaturedItemRequiredAttributes {
 	showPrice: boolean;
 	editMode: boolean;
 	backgroundColor: string;
+	style: { color: { background: string } };
 }
 
 interface FeaturedCategoryRequiredAttributes
@@ -116,11 +117,16 @@ export const withFeaturedItem =
 			product,
 			setAttributes,
 		} = props;
-		const { mediaId, mediaSrc, isRepeated, imageFit, backgroundColor } =
-			attributes;
+		const {
+			mediaId,
+			mediaSrc,
+			isRepeated,
+			imageFit,
+			backgroundColor,
+			style,
+		} = attributes;
 		const item = category || product;
 		const [ backgroundImageSize, setBackgroundImageSize ] = useState( {} );
-
 		const {
 			backgroundImageSrc,
 			setFeaturedProductParentDivDimensions,
@@ -132,8 +138,9 @@ export const withFeaturedItem =
 			blockName: name,
 			blockAttributes: { isRepeated, imageFit },
 		} );
+		const featuredProductParentRef = useRef( null );
 
-		const blockName =
+		const blockLabelName =
 			name === 'woocommerce/featured-category'
 				? 'Featured Category'
 				: 'Featured Product';
@@ -148,11 +155,8 @@ export const withFeaturedItem =
 			} );
 
 			if ( isLoading === false ) {
-				const element = document
-					?.getElementsByTagName( 'iframe' )[ 0 ]
-					?.contentWindow?.document.querySelector(
-						'.featured-product-parent'
-					) as HTMLElement | null;
+				const element =
+					featuredProductParentRef.current as HTMLElement | null;
 
 				if ( ! element ) return;
 
@@ -162,15 +166,16 @@ export const withFeaturedItem =
 			return () => observer.disconnect();
 		}, [ isLoading ] );
 
+		// `backgroundColor` is set when using a theme's default color palette, while `style.color.background` is set when a custom color is chosen using the color picker.
 		useEffect( () => {
 			if (
 				! backgroundColorVisibility &&
-				backgroundColor &&
+				( backgroundColor || style?.color?.background ) &&
 				! isLoading
 			) {
 				dispatch( 'core/notices' ).createNotice(
 					'warning',
-					`${ blockName } block's background color may not be visible if the product has a non-transparent image or if the selected non-transparent image fully covers the block`,
+					`${ blockLabelName } block's background color may not be visible if the product has a non-transparent image or if the selected non-transparent image fully covers the block`,
 					{
 						id: `${ name }-bg-image-color-warning`,
 						isDismissible: true,
@@ -183,7 +188,12 @@ export const withFeaturedItem =
 					`${ name }-bg-image-color-warning`
 				);
 			};
-		}, [ backgroundColorVisibility, isLoading, backgroundColor ] );
+		}, [
+			backgroundColorVisibility,
+			isLoading,
+			backgroundColor,
+			style?.color?.background,
+		] );
 
 		const className = getClassPrefixFromName( name );
 
@@ -303,6 +313,7 @@ export const withFeaturedItem =
 					/>
 					<div
 						className={ `${ containerClass } featured-product-parent` }
+						ref={ featuredProductParentRef }
 						style={ containerStyle }
 					>
 						<div className={ `${ className }__wrapper` }>

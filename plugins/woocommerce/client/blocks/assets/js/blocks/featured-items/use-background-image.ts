@@ -7,7 +7,7 @@ import {
 	getImageSrcFromProduct,
 	getImageIdFromProduct,
 } from '@woocommerce/utils';
-import { useEffect, useState } from '@wordpress/element';
+import { useEffect, useState, useRef } from '@wordpress/element';
 import type { Dispatch, SetStateAction } from 'react';
 
 /**
@@ -59,6 +59,8 @@ export function useBackgroundImage( {
 	const [ isImageBgTransparent, setIsImageBgTransparent ] = useState( false );
 	const [ originalImgDimension, setOriginalImgDimension ] =
 		useState< BgImageDimensions >( { height: 0, width: 0 } );
+	const shadowImgRef = useRef< HTMLImageElement | null >( null );
+	const shadowCanvasRef = useRef< HTMLCanvasElement | null >( null );
 
 	useEffect( () => {
 		if ( mediaId ) {
@@ -86,9 +88,18 @@ export function useBackgroundImage( {
 
 	useEffect( () => {
 		if ( backgroundImageSrc ) {
-			const img = new Image();
-			img.src = backgroundImageSrc;
+			if ( ! shadowImgRef.current ) {
+				shadowImgRef.current = new Image();
+			}
 
+			if ( ! shadowCanvasRef.current ) {
+				shadowCanvasRef.current = document.createElement( 'canvas' );
+			}
+
+			const img = shadowImgRef.current;
+			const canvas = shadowCanvasRef.current;
+
+			img.src = backgroundImageSrc;
 			img.onload = () => {
 				const width = img.naturalWidth;
 				const height = img.naturalHeight;
@@ -100,8 +111,6 @@ export function useBackgroundImage( {
 					} );
 				}
 
-				// Create a canvas element.
-				const canvas = document.createElement( 'canvas' );
 				canvas.width = width;
 				canvas.height = height;
 
@@ -122,6 +131,12 @@ export function useBackgroundImage( {
 				}
 			};
 		}
+
+		return () => {
+			if ( shadowImgRef.current ) {
+				shadowImgRef.current.onload = null; // Clean up image onload event on unmount.
+			}
+		};
 	}, [ backgroundImageSrc ] );
 
 	useEffect( () => {
