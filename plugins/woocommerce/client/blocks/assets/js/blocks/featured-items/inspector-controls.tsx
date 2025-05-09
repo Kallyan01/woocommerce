@@ -283,8 +283,10 @@ export const InspectorControls = ( {
 				{ bgColorVisibility === false && backgroundColor && (
 					<div className="image-bg-color-warning">
 						<Notice status="warning" isDismissible={ false }>
-							You've set background color to an opaque image, the
-							background color cannot be seen.
+							{ __(
+								"You've set background color to an opaque image, the",
+								'woocommerce'
+							) }
 						</Notice>
 					</div>
 				) }
@@ -312,7 +314,7 @@ export const withInspectorControls =
 			showPrice,
 			bgColorVisibility,
 			backgroundColor,
-			style
+			style,
 		} = attributes;
 
 		const item =
@@ -324,13 +326,6 @@ export const withInspectorControls =
 			gradientAttribute: 'overlayGradient',
 			customGradientAttribute: 'overlayGradient',
 		} );
-		const { backgroundImageSrc, backgroundColorVisibility } =
-			useBackgroundImage( {
-				item,
-				mediaId,
-				mediaSrc,
-				blockName: name,
-			} );
 
 		const contentPanel =
 			name === BLOCK_NAMES.featuredProduct ? (
@@ -344,6 +339,13 @@ export const withInspectorControls =
 					}
 				/>
 			) : undefined;
+
+		const { backgroundImageSrc } = useBackgroundImage( {
+			item,
+			mediaId,
+			mediaSrc,
+			blockName: name,
+		} );
 
 		return (
 			<>
@@ -362,7 +364,9 @@ export const withInspectorControls =
 					setGradient={ setGradient }
 					showDesc={ showDesc }
 					bgColorVisibility={ bgColorVisibility }
-					backgroundColor={ backgroundColor || style?.color?.background }
+					backgroundColor={
+						backgroundColor || style?.color?.background
+					}
 				/>
 				<Component { ...props } />
 			</>

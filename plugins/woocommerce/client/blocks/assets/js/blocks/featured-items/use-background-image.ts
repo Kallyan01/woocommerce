@@ -8,7 +8,6 @@ import {
 	getImageIdFromProduct,
 } from '@woocommerce/utils';
 import { useEffect, useState, useRef } from '@wordpress/element';
-import type { Dispatch, SetStateAction } from 'react';
 
 /**
  * Internal dependencies
@@ -25,10 +24,9 @@ interface BackgroundProps {
 	item: ProductResponseItem | WP_REST_API_Category;
 	mediaId: number | undefined;
 	mediaSrc: string | undefined;
-	blockAttributes: { isRepeated: boolean; imageFit: string };
 }
 
-interface BgImageDimensions {
+export interface BgImageDimensions {
 	height: number;
 	width: number;
 }
@@ -36,10 +34,8 @@ interface BgImageDimensions {
 interface BackgroundImage {
 	backgroundImageId: number;
 	backgroundImageSrc: string;
-	backgroundColorVisibility: boolean;
-	setFeaturedProductParentDivDimensions: Dispatch<
-		SetStateAction< BgImageDimensions >
-	>;
+	isImageBgTransparent: boolean,
+	originalImgDimension: BgImageDimensions,
 }
 
 export function useBackgroundImage( {
@@ -47,17 +43,10 @@ export function useBackgroundImage( {
 	item,
 	mediaId,
 	mediaSrc,
-	blockAttributes,
 }: BackgroundProps ): BackgroundImage {
 	const [ backgroundImageId, setBackgroundImageId ] = useState( 0 );
 	const [ backgroundImageSrc, setBackgroundImageSrc ] = useState( '' );
-	const [ backgroundColorVisibility, setBackgroundColorVisibility ] =
-		useState( false );
-	const [
-		featuredProductParentDivDimensions,
-		setFeaturedProductParentDivDimensions,
-	] = useState< BgImageDimensions >( { height: 0, width: 0 } );
-	const [ isImageBgTransparent, setIsImageBgTransparent ] = useState( false );
+	const [ isImageBgTransparent, setIsImageBgTransparent ] = useState< boolean >( false );
 	const [ originalImgDimension, setOriginalImgDimension ] =
 		useState< BgImageDimensions >( { height: 0, width: 0 } );
 	const shadowImgRef = useRef< HTMLImageElement | null >( null );
@@ -140,51 +129,10 @@ export function useBackgroundImage( {
 		};
 	}, [ backgroundImageSrc ] );
 
-	useEffect( () => {
-		if ( isImageBgTransparent ) {
-			setBackgroundColorVisibility( true );
-		}
-
-		// Checks if original-bg-image is smaller than the parent div's available space.
-		if (
-			originalImgDimension.height <
-				featuredProductParentDivDimensions.height ||
-			originalImgDimension.width <
-				featuredProductParentDivDimensions.width
-		) {
-			setBackgroundColorVisibility( true );
-		}
-
-		// Checks if bg-image is not transparent and original-bg-image size is bigger than parent div's available space.
-		if (
-			! isImageBgTransparent &&
-			originalImgDimension.height >=
-				featuredProductParentDivDimensions.height &&
-			originalImgDimension.width >=
-				featuredProductParentDivDimensions.width
-		) {
-			setBackgroundColorVisibility( false );
-		}
-
-		// Checks if bg-image is not transparent and repeated all-over parent div or covers available parent div space.
-		if (
-			! isImageBgTransparent &&
-			( blockAttributes?.isRepeated ||
-				blockAttributes?.imageFit === 'cover' )
-		) {
-			setBackgroundColorVisibility( false );
-		}
-	}, [
-		featuredProductParentDivDimensions,
-		isImageBgTransparent,
-		blockAttributes,
-		originalImgDimension,
-	] );
-
 	return {
 		backgroundImageId,
 		backgroundImageSrc,
-		backgroundColorVisibility,
-		setFeaturedProductParentDivDimensions,
+		isImageBgTransparent,
+		originalImgDimension
 	};
 }

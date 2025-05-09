@@ -20,7 +20,7 @@ import { trimCharacters } from '@woocommerce/utils';
 import { CallToAction } from './call-to-action';
 import { ConstrainedResizable } from './constrained-resizable';
 import { EditorBlock, GenericBlockUIConfig } from './types';
-import { useBackgroundImage } from './use-background-image';
+import { BgImageDimensions, useBackgroundImage } from './use-background-image';
 import {
 	dimRatioToClass,
 	getBackgroundImageStyles,
@@ -118,31 +118,28 @@ export const withFeaturedItem =
 			product,
 			setAttributes,
 		} = props;
-		const {
-			mediaId,
-			mediaSrc,
-			isRepeated,
-			imageFit,
-		} = attributes;
+		const { mediaId, mediaSrc, isRepeated, imageFit, bgColorVisibility } =
+			attributes;
 		const item = category || product;
 		const [ backgroundImageSize, setBackgroundImageSize ] = useState( {} );
 		const {
 			backgroundImageSrc,
-			setFeaturedProductParentDivDimensions,
-			backgroundColorVisibility,
+			isImageBgTransparent,
+			originalImgDimension,
 		} = useBackgroundImage( {
 			item,
 			mediaId,
 			mediaSrc,
 			blockName: name,
-			blockAttributes: { isRepeated, imageFit },
 		} );
 		const featuredProductParentRef = useRef( null );
+		const [ parentContainerDimension, setParentContainerDimension ] =
+			useState< BgImageDimensions >( { height: 0, width: 0 } );
 
 		useEffect( () => {
 			// Observes the resizable block's dimension changes.
 			const observer = new ResizeObserver( ( entries ) => {
-				setFeaturedProductParentDivDimensions( {
+				setParentContainerDimension( {
 					height: entries[ 0 ].contentRect.height,
 					width: entries[ 0 ].contentRect.width,
 				} );
@@ -161,10 +158,48 @@ export const withFeaturedItem =
 		}, [ isLoading ] );
 
 		useEffect( () => {
-			setAttributes( {
-				bgColorVisibility: backgroundColorVisibility,
-			} );
-		}, [ backgroundColorVisibility ] );
+			let isBgVisible = bgColorVisibility;
+
+			if ( isImageBgTransparent ) {
+				isBgVisible = true;
+			}
+
+			// Checks if original-bg-image is smaller than the parent container's available space.
+			if (
+				originalImgDimension.height <
+					parentContainerDimension.height ||
+				originalImgDimension.width < parentContainerDimension.width
+			) {
+				isBgVisible = true;
+			}
+
+			// Checks if bg-image is not transparent and original-bg-image size is bigger than parent container's available space.
+			if (
+				! isImageBgTransparent &&
+				originalImgDimension.height >=
+					parentContainerDimension.height &&
+				originalImgDimension.width >= parentContainerDimension.width
+			) {
+				isBgVisible = false;
+			}
+
+			// Checks if bg-image is not transparent and repeated all-over parent div or covers available parent div space.
+			if (
+				! isImageBgTransparent &&
+				( isRepeated || imageFit === 'cover' )
+			) {
+				isBgVisible = false;
+			}
+
+			if ( bgColorVisibility !== isBgVisible ) {
+				setAttributes( { bgColorVisibility: isBgVisible } );
+			}
+		}, [
+			parentContainerDimension,
+			isRepeated,
+			imageFit,
+			backgroundImageSrc,
+		] );
 
 		const className = getClassPrefixFromName( name );
 
@@ -283,7 +318,7 @@ export const withFeaturedItem =
 						style={ { minHeight } }
 					/>
 					<div
-						className={ `${ containerClass } featured-product-parent` }
+						className={ `${ containerClass }` }
 						ref={ featuredProductParentRef }
 						style={ containerStyle }
 					>
