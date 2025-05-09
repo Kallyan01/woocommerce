@@ -159,7 +159,6 @@ export const withFeaturedItem =
 
 		useEffect( () => {
 			let isBgVisible = bgColorVisibility;
-
 			if ( isImageBgTransparent ) {
 				isBgVisible = true;
 			}
@@ -196,6 +195,7 @@ export const withFeaturedItem =
 			}
 		}, [
 			parentContainerDimension,
+			originalImgDimension,
 			isRepeated,
 			imageFit,
 			backgroundImageSrc,

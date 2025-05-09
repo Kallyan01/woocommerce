@@ -284,7 +284,7 @@ export const InspectorControls = ( {
 					<div className="image-bg-color-warning">
 						<Notice status="warning" isDismissible={ false }>
 							{ __(
-								"You've set background color to an opaque image, the",
+								"You've set background color to an opaque image, the background color cannot be seen.",
 								'woocommerce'
 							) }
 						</Notice>
