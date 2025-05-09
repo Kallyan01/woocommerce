@@ -103,6 +103,10 @@
 		"showPrice": {
 			"type": "boolean",
 			"default": true
+		},
+		"bgColorVisibility": {
+			"type": "boolean",
+			"default": true
 		}
 	},
 	"textdomain": "woocommerce",

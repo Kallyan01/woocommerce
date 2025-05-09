@@ -18,6 +18,7 @@ import {
 	getCategoryImageSrc,
 	getCategoryImageId,
 } from './featured-category/utils';
+import { FeaturedItemRequiredAttributes } from './with-featured-item';
 
 interface BackgroundProps {
 	blockName: string;

@@ -48,8 +48,9 @@ export interface FeaturedItemRequiredAttributes {
 	showDesc: boolean;
 	showPrice: boolean;
 	editMode: boolean;
-	backgroundColor: string;
+	backgroundColor: string | undefined;
 	style: { color: { background: string } };
+	bgColorVisibility: boolean;
 }
 
 interface FeaturedCategoryRequiredAttributes
@@ -122,8 +123,6 @@ export const withFeaturedItem =
 			mediaSrc,
 			isRepeated,
 			imageFit,
-			backgroundColor,
-			style,
 		} = attributes;
 		const item = category || product;
 		const [ backgroundImageSize, setBackgroundImageSize ] = useState( {} );
@@ -139,11 +138,6 @@ export const withFeaturedItem =
 			blockAttributes: { isRepeated, imageFit },
 		} );
 		const featuredProductParentRef = useRef( null );
-
-		const blockLabelName =
-			name === 'woocommerce/featured-category'
-				? 'Featured Category'
-				: 'Featured Product';
 
 		useEffect( () => {
 			// Observes the resizable block's dimension changes.
@@ -166,34 +160,11 @@ export const withFeaturedItem =
 			return () => observer.disconnect();
 		}, [ isLoading ] );
 
-		// `backgroundColor` is set when using a theme's default color palette, while `style.color.background` is set when a custom color is chosen using the color picker.
 		useEffect( () => {
-			if (
-				! backgroundColorVisibility &&
-				( backgroundColor || style?.color?.background ) &&
-				! isLoading
-			) {
-				dispatch( 'core/notices' ).createNotice(
-					'warning',
-					`${ blockLabelName } block's background color may not be visible if the product has a non-transparent image or if the selected non-transparent image fully covers the block`,
-					{
-						id: `${ name }-bg-image-color-warning`,
-						isDismissible: true,
-					}
-				);
-			}
-
-			return () => {
-				dispatch( 'core/notices' ).removeNotice(
-					`${ name }-bg-image-color-warning`
-				);
-			};
-		}, [
-			backgroundColorVisibility,
-			isLoading,
-			backgroundColor,
-			style?.color?.background,
-		] );
+			setAttributes( {
+				bgColorVisibility: backgroundColorVisibility,
+			} );
+		}, [ backgroundColorVisibility ] );
 
 		const className = getClassPrefixFromName( name );
 
