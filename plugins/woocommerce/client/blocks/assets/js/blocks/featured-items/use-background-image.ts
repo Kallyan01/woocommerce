@@ -34,8 +34,8 @@ export interface BgImageDimensions {
 interface BackgroundImage {
 	backgroundImageId: number;
 	backgroundImageSrc: string;
-	isImageBgTransparent: boolean,
-	originalImgDimension: BgImageDimensions,
+	isImageBgTransparent: boolean;
+	originalImgDimension: BgImageDimensions;
 }
 
 export function useBackgroundImage( {
@@ -46,7 +46,8 @@ export function useBackgroundImage( {
 }: BackgroundProps ): BackgroundImage {
 	const [ backgroundImageId, setBackgroundImageId ] = useState( 0 );
 	const [ backgroundImageSrc, setBackgroundImageSrc ] = useState( '' );
-	const [ isImageBgTransparent, setIsImageBgTransparent ] = useState< boolean >( false );
+	const [ isImageBgTransparent, setIsImageBgTransparent ] =
+		useState< boolean >( false );
 	const [ originalImgDimension, setOriginalImgDimension ] =
 		useState< BgImageDimensions >( { height: 0, width: 0 } );
 	const shadowImgRef = useRef< HTMLImageElement | null >( null );
@@ -110,14 +111,20 @@ export function useBackgroundImage( {
 
 				ctx.drawImage( img, 0, 0, width, height );
 
-				const imageData = ctx.getImageData( 0, 0, width, height ).data;
+				const imagePixelData = ctx.getImageData( 0, 0, width, height ).data;
 
-				// Check for any transparent pixels.
-				for ( let i = 3; i < imageData.length; i += 4 ) {
-					if ( imageData[ i ] < 255 ) {
-						setIsImageBgTransparent( true );
-						break;
+				// Check for transparency (alpha channel < 255).
+				const hasTransparentPixels = ( () => {
+					for ( let i = 3; i < imagePixelData.length; i += 4 ) {
+						if ( imagePixelData[ i ] < 255 ) {
+							return true;
+						}
 					}
+					return false;
+				} )();
+
+				if ( isImageBgTransparent !== hasTransparentPixels ) {
+					setIsImageBgTransparent( hasTransparentPixels );
 				}
 			};
 		}
@@ -133,6 +140,6 @@ export function useBackgroundImage( {
 		backgroundImageId,
 		backgroundImageSrc,
 		isImageBgTransparent,
-		originalImgDimension
+		originalImgDimension,
 	};
 }
