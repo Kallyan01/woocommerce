@@ -106,7 +106,10 @@ export function useBackgroundImage( {
 				canvas.height = height;
 
 				// Draw the image on the canvas element.
-				const ctx = canvas.getContext( '2d' );
+				const ctx = canvas.getContext( '2d', {
+					willReadFrequently: true,
+				} );
+
 				if ( ! ctx ) return;
 
 				ctx.drawImage( img, 0, 0, width, height );
