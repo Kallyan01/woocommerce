@@ -111,7 +111,12 @@ export function useBackgroundImage( {
 
 				ctx.drawImage( img, 0, 0, width, height );
 
-				const imagePixelData = ctx.getImageData( 0, 0, width, height ).data;
+				const imagePixelData = ctx.getImageData(
+					0,
+					0,
+					width,
+					height
+				).data;
 
 				// Check for transparency (alpha channel < 255).
 				const hasTransparentPixels = ( () => {
@@ -127,6 +132,8 @@ export function useBackgroundImage( {
 					setIsImageBgTransparent( hasTransparentPixels );
 				}
 			};
+		} else {
+			setIsImageBgTransparent( true );
 		}
 
 		return () => {

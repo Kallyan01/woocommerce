@@ -199,6 +199,7 @@ export const withFeaturedItem =
 			isRepeated,
 			imageFit,
 			backgroundImageSrc,
+			isImageBgTransparent,
 		] );
 
 		const className = getClassPrefixFromName( name );
