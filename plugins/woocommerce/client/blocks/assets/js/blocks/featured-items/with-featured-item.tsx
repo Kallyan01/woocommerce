@@ -4,7 +4,6 @@
  * External dependencies
  */
 import type { BlockAlignment } from '@wordpress/blocks';
-import { dispatch } from '@wordpress/data';
 import { ProductResponseItem, isEmpty } from '@woocommerce/types';
 import { Icon, Placeholder, Spinner } from '@wordpress/components';
 import clsx from 'clsx';
@@ -118,10 +117,10 @@ export const withFeaturedItem =
 			product,
 			setAttributes,
 		} = props;
-		const { mediaId, mediaSrc, isRepeated, imageFit, bgColorVisibility } =
-			attributes;
+		const { mediaId, mediaSrc, isRepeated, imageFit } = attributes;
 		const item = category || product;
 		const [ backgroundImageSize, setBackgroundImageSize ] = useState( {} );
+		const [ bgColorVisibility, setBgColorVisibility ] = useState( true );
 		const {
 			backgroundImageSrc,
 			isImageBgTransparent,
@@ -165,8 +164,7 @@ export const withFeaturedItem =
 
 			// Checks if original-bg-image is smaller than the parent container's available space.
 			if (
-				originalImgDimension.height <
-					parentContainerDimension.height ||
+				originalImgDimension.height < parentContainerDimension.height ||
 				originalImgDimension.width < parentContainerDimension.width
 			) {
 				isBgVisible = true;
@@ -191,7 +189,7 @@ export const withFeaturedItem =
 			}
 
 			if ( bgColorVisibility !== isBgVisible ) {
-				setAttributes( { bgColorVisibility: isBgVisible } );
+				setBgColorVisibility( isBgVisible );
 			}
 		}, [
 			parentContainerDimension,
@@ -408,6 +406,7 @@ export const withFeaturedItem =
 				<Component
 					{ ...props }
 					backgroundImageSize={ backgroundImageSize }
+					isBgVisible={ bgColorVisibility }
 				/>
 			);
 		}
@@ -417,6 +416,7 @@ export const withFeaturedItem =
 				<Component
 					{ ...props }
 					backgroundImageSize={ backgroundImageSize }
+					isBgVisible={ bgColorVisibility }
 				/>
 				{ item ? renderItem() : renderNoItem() }
 			</>

@@ -50,7 +50,6 @@ interface InspectorControlsRequiredAttributes
 	alt: string;
 	backgroundImageSrc: string;
 	contentPanel: JSX.Element | undefined;
-	bgColorVisibility: boolean;
 }
 
 interface InspectorControlsProps extends InspectorControlsRequiredAttributes {
@@ -65,6 +64,7 @@ interface WithInspectorControlsRequiredProps< T > {
 	attributes: InspectorControlsRequiredAttributes &
 		EditorBlock< T >[ 'attributes' ];
 	setAttributes: InspectorControlsProps[ 'setAttributes' ];
+	isBgVisible: boolean;
 }
 
 interface WithInspectorControlsCategoryProps< T >
@@ -298,7 +298,7 @@ export const InspectorControls = ( {
 export const withInspectorControls =
 	< T extends EditorBlock< T > >( Component: ComponentType< T > ) =>
 	( props: WithInspectorControlsProps< T > ) => {
-		const { attributes, name, setAttributes } = props;
+		const { attributes, name, setAttributes, isBgVisible } = props;
 		const {
 			alt,
 			dimRatio,
@@ -312,7 +312,6 @@ export const withInspectorControls =
 			overlayGradient,
 			showDesc,
 			showPrice,
-			bgColorVisibility,
 			backgroundColor,
 			style,
 		} = attributes;
@@ -363,7 +362,7 @@ export const withInspectorControls =
 					setAttributes={ setAttributes }
 					setGradient={ setGradient }
 					showDesc={ showDesc }
-					bgColorVisibility={ bgColorVisibility }
+					bgColorVisibility={ isBgVisible }
 					backgroundColor={
 						backgroundColor || style?.color?.background
 					}
