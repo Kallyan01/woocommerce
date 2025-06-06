@@ -64,7 +64,10 @@ interface WithInspectorControlsRequiredProps< T > {
 	attributes: InspectorControlsRequiredAttributes &
 		EditorBlock< T >[ 'attributes' ];
 	setAttributes: InspectorControlsProps[ 'setAttributes' ];
-	isBgVisible: boolean;
+	isBgVisible: {
+		value: boolean;
+		message?: string | null;
+	};
 }
 
 interface WithInspectorControlsCategoryProps< T >
@@ -280,16 +283,15 @@ export const InspectorControls = ( {
 				) }
 			</GutenbergInspectorControls>
 			<GutenbergInspectorControls group="color">
-				{ bgColorVisibility === false && backgroundColor && (
-					<div className="image-bg-color-warning">
-						<Notice status="warning" isDismissible={ false }>
-							{ __(
-								"You've set background color to an opaque image, the background color cannot be seen.",
-								'woocommerce'
-							) }
-						</Notice>
-					</div>
-				) }
+				{ bgColorVisibility &&
+					bgColorVisibility.value === false &&
+					backgroundColor && (
+						<div className="image-bg-color-warning">
+							<Notice status="warning" isDismissible={ false }>
+								{ bgColorVisibility.message }
+							</Notice>
+						</div>
+					) }
 			</GutenbergInspectorControls>
 		</>
 	);

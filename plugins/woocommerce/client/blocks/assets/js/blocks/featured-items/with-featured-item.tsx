@@ -7,11 +7,18 @@ import type { BlockAlignment } from '@wordpress/blocks';
 import { ProductResponseItem, isEmpty } from '@woocommerce/types';
 import { Icon, Placeholder, Spinner } from '@wordpress/components';
 import clsx from 'clsx';
-import { useCallback, useState, useEffect, useRef } from '@wordpress/element';
+import {
+	useCallback,
+	useState,
+	useEffect,
+	useRef,
+	useMemo,
+} from '@wordpress/element';
 import { WP_REST_API_Category } from 'wp-types';
 import { useStyleProps } from '@woocommerce/base-hooks';
 import type { ComponentType, Dispatch, SetStateAction } from 'react';
 import { trimCharacters } from '@woocommerce/utils';
+import { __ } from '@wordpress/i18n';
 
 /**
  * Internal dependencies
@@ -49,7 +56,10 @@ export interface FeaturedItemRequiredAttributes {
 	editMode: boolean;
 	backgroundColor: string | undefined;
 	style: { color: { background: string } };
-	bgColorVisibility: boolean;
+	bgColorVisibility: {
+		value: boolean;
+		message?: string | null;
+	};
 }
 
 interface FeaturedCategoryRequiredAttributes
@@ -120,7 +130,6 @@ export const withFeaturedItem =
 		const { mediaId, mediaSrc, isRepeated, imageFit } = attributes;
 		const item = category || product;
 		const [ backgroundImageSize, setBackgroundImageSize ] = useState( {} );
-		const [ bgColorVisibility, setBgColorVisibility ] = useState( true );
 		const {
 			backgroundImageSrc,
 			isImageBgTransparent,
@@ -156,18 +165,48 @@ export const withFeaturedItem =
 			return () => observer.disconnect();
 		}, [ isLoading ] );
 
-		useEffect( () => {
-			let isBgVisible = bgColorVisibility;
+		const calculateBackgroundVisibility = ( {
+			isImageBgTransparent,
+			originalImgDimension,
+			parentContainerDimension,
+			isRepeated,
+			imageFit,
+		}: {
+			isImageBgTransparent: boolean;
+			originalImgDimension: BgImageDimensions;
+			parentContainerDimension: BgImageDimensions;
+			isRepeated: boolean;
+			imageFit: 'cover' | 'none';
+		} ) => {
 			if ( isImageBgTransparent ) {
-				isBgVisible = true;
+				return {
+					value: true,
+					reason: null,
+				};
 			}
 
-			// Checks if original-bg-image is smaller than the parent container's available space.
+			// Checks if bg-image is not transparent and repeated all-over parent div or covers available parent div space.
 			if (
-				originalImgDimension.height < parentContainerDimension.height ||
-				originalImgDimension.width < parentContainerDimension.width
+				! isImageBgTransparent &&
+				( isRepeated || imageFit === 'cover' )
 			) {
-				isBgVisible = true;
+				if ( isRepeated ) {
+					return {
+						value: false,
+						message: __(
+							'You’ve set a background color behind an image set to repeat, the background color cannot be seen.',
+							'woocommerce'
+						),
+					};
+				}
+
+				return {
+					value: false,
+					message: __(
+						'You’ve set a background color behind an image set to cover, the background color cannot be seen.',
+						'woocommerce'
+					),
+				};
 			}
 
 			// Checks if bg-image is not transparent and original-bg-image size is bigger than parent container's available space.
@@ -177,28 +216,51 @@ export const withFeaturedItem =
 					parentContainerDimension.height &&
 				originalImgDimension.width >= parentContainerDimension.width
 			) {
-				isBgVisible = false;
+				return {
+					value: false,
+					message: __(
+						"You've set background color to an opaque image, the background color cannot be seen.",
+						'woocommerce'
+					),
+				};
 			}
 
-			// Checks if bg-image is not transparent and repeated all-over parent div or covers available parent div space.
+			// Checks if original-bg-image is smaller than the parent container's available space.
 			if (
-				! isImageBgTransparent &&
-				( isRepeated || imageFit === 'cover' )
+				originalImgDimension.height < parentContainerDimension.height ||
+				originalImgDimension.width < parentContainerDimension.width
 			) {
-				isBgVisible = false;
+				return {
+					value: true,
+					reason: null,
+				};
 			}
 
-			if ( bgColorVisibility !== isBgVisible ) {
-				setBgColorVisibility( isBgVisible );
-			}
-		}, [
-			parentContainerDimension,
-			originalImgDimension,
-			isRepeated,
-			imageFit,
-			backgroundImageSrc,
-			isImageBgTransparent,
-		] );
+			// default case
+			return {
+				value: true,
+				reason: null,
+			};
+		};
+
+		const isBgVisible = useMemo(
+			() =>
+				calculateBackgroundVisibility( {
+					isImageBgTransparent,
+					originalImgDimension,
+					parentContainerDimension,
+					isRepeated,
+					imageFit,
+				} ),
+			[
+				parentContainerDimension,
+				originalImgDimension,
+				isRepeated,
+				imageFit,
+				backgroundImageSrc,
+				isImageBgTransparent,
+			]
+		);
 
 		const className = getClassPrefixFromName( name );
 
@@ -406,7 +468,7 @@ export const withFeaturedItem =
 				<Component
 					{ ...props }
 					backgroundImageSize={ backgroundImageSize }
-					isBgVisible={ bgColorVisibility }
+					isBgVisible={ isBgVisible }
 				/>
 			);
 		}
@@ -416,7 +478,7 @@ export const withFeaturedItem =
 				<Component
 					{ ...props }
 					backgroundImageSize={ backgroundImageSize }
-					isBgVisible={ bgColorVisibility }
+					isBgVisible={ isBgVisible }
 				/>
 				{ item ? renderItem() : renderNoItem() }
 			</>
