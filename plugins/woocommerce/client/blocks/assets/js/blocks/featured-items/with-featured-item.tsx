@@ -300,7 +300,7 @@ export const withFeaturedItem =
 						style={ { minHeight } }
 					/>
 					<div
-						className={ `${ containerClass }` }
+						className={ containerClass }
 						ref={ featuredProductParentRef }
 						style={ containerStyle }
 					>
