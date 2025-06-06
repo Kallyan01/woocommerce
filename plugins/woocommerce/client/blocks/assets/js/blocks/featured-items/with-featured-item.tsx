@@ -18,7 +18,6 @@ import { WP_REST_API_Category } from 'wp-types';
 import { useStyleProps } from '@woocommerce/base-hooks';
 import type { ComponentType, Dispatch, SetStateAction } from 'react';
 import { trimCharacters } from '@woocommerce/utils';
-import { __ } from '@wordpress/i18n';
 
 /**
  * Internal dependencies
@@ -28,6 +27,7 @@ import { ConstrainedResizable } from './constrained-resizable';
 import { EditorBlock, GenericBlockUIConfig } from './types';
 import { BgImageDimensions, useBackgroundImage } from './use-background-image';
 import {
+	getBackgroundColorVisibilityStatus,
 	dimRatioToClass,
 	getBackgroundImageStyles,
 	getClassPrefixFromName,
@@ -57,7 +57,7 @@ export interface FeaturedItemRequiredAttributes {
 	backgroundColor: string | undefined;
 	style: { color: { background: string } };
 	bgColorVisibility: {
-		value: boolean;
+		isBackgroundVisible: boolean;
 		message?: string | null;
 	};
 }
@@ -165,87 +165,9 @@ export const withFeaturedItem =
 			return () => observer.disconnect();
 		}, [ isLoading ] );
 
-		const calculateBackgroundVisibility = ( {
-			isImageBgTransparent,
-			originalImgDimension,
-			parentContainerDimension,
-			isRepeated,
-			imageFit,
-		}: {
-			isImageBgTransparent: boolean;
-			originalImgDimension: BgImageDimensions;
-			parentContainerDimension: BgImageDimensions;
-			isRepeated: boolean;
-			imageFit: 'cover' | 'none';
-		} ) => {
-			if ( isImageBgTransparent ) {
-				return {
-					value: true,
-					reason: null,
-				};
-			}
-
-			// Checks if bg-image is not transparent and repeated all-over parent div or covers available parent div space.
-			if (
-				! isImageBgTransparent &&
-				( isRepeated || imageFit === 'cover' )
-			) {
-				if ( isRepeated ) {
-					return {
-						value: false,
-						message: __(
-							'You’ve set a background color behind an image set to repeat, the background color cannot be seen.',
-							'woocommerce'
-						),
-					};
-				}
-
-				return {
-					value: false,
-					message: __(
-						'You’ve set a background color behind an image set to cover, the background color cannot be seen.',
-						'woocommerce'
-					),
-				};
-			}
-
-			// Checks if bg-image is not transparent and original-bg-image size is bigger than parent container's available space.
-			if (
-				! isImageBgTransparent &&
-				originalImgDimension.height >=
-					parentContainerDimension.height &&
-				originalImgDimension.width >= parentContainerDimension.width
-			) {
-				return {
-					value: false,
-					message: __(
-						"You've set background color to an opaque image, the background color cannot be seen.",
-						'woocommerce'
-					),
-				};
-			}
-
-			// Checks if original-bg-image is smaller than the parent container's available space.
-			if (
-				originalImgDimension.height < parentContainerDimension.height ||
-				originalImgDimension.width < parentContainerDimension.width
-			) {
-				return {
-					value: true,
-					reason: null,
-				};
-			}
-
-			// default case
-			return {
-				value: true,
-				reason: null,
-			};
-		};
-
-		const isBgVisible = useMemo(
+		const backgroundColorVisibilityStatus = useMemo(
 			() =>
-				calculateBackgroundVisibility( {
+				getBackgroundColorVisibilityStatus( {
 					isImageBgTransparent,
 					originalImgDimension,
 					parentContainerDimension,
@@ -257,7 +179,6 @@ export const withFeaturedItem =
 				originalImgDimension,
 				isRepeated,
 				imageFit,
-				backgroundImageSrc,
 				isImageBgTransparent,
 			]
 		);
@@ -468,7 +389,7 @@ export const withFeaturedItem =
 				<Component
 					{ ...props }
 					backgroundImageSize={ backgroundImageSize }
-					isBgVisible={ isBgVisible }
+					isBgVisible={ backgroundColorVisibilityStatus }
 				/>
 			);
 		}
@@ -478,7 +399,7 @@ export const withFeaturedItem =
 				<Component
 					{ ...props }
 					backgroundImageSize={ backgroundImageSize }
-					isBgVisible={ isBgVisible }
+					isBgVisible={ backgroundColorVisibilityStatus }
 				/>
 				{ item ? renderItem() : renderNoItem() }
 			</>

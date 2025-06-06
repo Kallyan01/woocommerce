@@ -65,7 +65,7 @@ interface WithInspectorControlsRequiredProps< T > {
 		EditorBlock< T >[ 'attributes' ];
 	setAttributes: InspectorControlsProps[ 'setAttributes' ];
 	isBgVisible: {
-		value: boolean;
+		isBackgroundVisible: boolean;
 		message?: string | null;
 	};
 }
@@ -284,7 +284,7 @@ export const InspectorControls = ( {
 			</GutenbergInspectorControls>
 			<GutenbergInspectorControls group="color">
 				{ bgColorVisibility &&
-					bgColorVisibility.value === false &&
+					bgColorVisibility.isBackgroundVisible === false &&
 					backgroundColor && (
 						<div className="image-bg-color-warning">
 							<Notice status="warning" isDismissible={ false }>
