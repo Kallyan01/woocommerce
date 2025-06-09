@@ -284,7 +284,9 @@ export const InspectorControls = ( {
 			</GutenbergInspectorControls>
 			<GutenbergInspectorControls group="color">
 				{ backgroundColorVisibilityStatus &&
-					backgroundColorVisibilityStatus.isBackgroundVisible === false &&
+					backgroundColorVisibilityStatus.isBackgroundVisible ===
+						false &&
+					backgroundColorVisibilityStatus.message &&
 					backgroundColor && (
 						<div className="image-bg-color-warning">
 							<Notice status="warning" isDismissible={ false }>
@@ -300,7 +302,12 @@ export const InspectorControls = ( {
 export const withInspectorControls =
 	< T extends EditorBlock< T > >( Component: ComponentType< T > ) =>
 	( props: WithInspectorControlsProps< T > ) => {
-		const { attributes, name, setAttributes, backgroundColorVisibilityStatus } = props;
+		const {
+			attributes,
+			name,
+			setAttributes,
+			backgroundColorVisibilityStatus,
+		} = props;
 		const {
 			alt,
 			dimRatio,
@@ -364,7 +371,9 @@ export const withInspectorControls =
 					setAttributes={ setAttributes }
 					setGradient={ setGradient }
 					showDesc={ showDesc }
-					backgroundColorVisibilityStatus={ backgroundColorVisibilityStatus }
+					backgroundColorVisibilityStatus={
+						backgroundColorVisibilityStatus
+					}
 					backgroundColor={
 						backgroundColor || style?.color?.background
 					}

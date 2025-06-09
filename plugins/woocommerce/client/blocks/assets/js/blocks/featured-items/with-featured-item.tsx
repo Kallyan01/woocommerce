@@ -389,7 +389,9 @@ export const withFeaturedItem =
 				<Component
 					{ ...props }
 					backgroundImageSize={ backgroundImageSize }
-					backgroundColorVisibilityStatus={ backgroundColorVisibilityStatus }
+					backgroundColorVisibilityStatus={
+						backgroundColorVisibilityStatus
+					}
 				/>
 			);
 		}
@@ -399,7 +401,9 @@ export const withFeaturedItem =
 				<Component
 					{ ...props }
 					backgroundImageSize={ backgroundImageSize }
-					backgroundColorVisibilityStatus={ backgroundColorVisibilityStatus }
+					backgroundColorVisibilityStatus={
+						backgroundColorVisibilityStatus
+					}
 				/>
 				{ item ? renderItem() : renderNoItem() }
 			</>
