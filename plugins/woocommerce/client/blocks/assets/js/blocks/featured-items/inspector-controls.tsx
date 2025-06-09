@@ -64,9 +64,9 @@ interface WithInspectorControlsRequiredProps< T > {
 	attributes: InspectorControlsRequiredAttributes &
 		EditorBlock< T >[ 'attributes' ];
 	setAttributes: InspectorControlsProps[ 'setAttributes' ];
-	isBgVisible: {
+	backgroundColorVisibilityStatus: {
 		isBackgroundVisible: boolean;
-		message?: string | null;
+		message: string | null;
 	};
 }
 
@@ -101,7 +101,7 @@ export const InspectorControls = ( {
 	setAttributes,
 	setGradient,
 	showDesc,
-	bgColorVisibility,
+	backgroundColorVisibilityStatus,
 	backgroundColor,
 }: InspectorControlsProps ) => {
 	// FocalPointPicker was introduced in Gutenberg 5.0 (WordPress 5.2),
@@ -283,12 +283,12 @@ export const InspectorControls = ( {
 				) }
 			</GutenbergInspectorControls>
 			<GutenbergInspectorControls group="color">
-				{ bgColorVisibility &&
-					bgColorVisibility.isBackgroundVisible === false &&
+				{ backgroundColorVisibilityStatus &&
+					backgroundColorVisibilityStatus.isBackgroundVisible === false &&
 					backgroundColor && (
 						<div className="image-bg-color-warning">
 							<Notice status="warning" isDismissible={ false }>
-								{ bgColorVisibility.message }
+								{ backgroundColorVisibilityStatus.message }
 							</Notice>
 						</div>
 					) }
@@ -300,7 +300,7 @@ export const InspectorControls = ( {
 export const withInspectorControls =
 	< T extends EditorBlock< T > >( Component: ComponentType< T > ) =>
 	( props: WithInspectorControlsProps< T > ) => {
-		const { attributes, name, setAttributes, isBgVisible } = props;
+		const { attributes, name, setAttributes, backgroundColorVisibilityStatus } = props;
 		const {
 			alt,
 			dimRatio,
@@ -364,7 +364,7 @@ export const withInspectorControls =
 					setAttributes={ setAttributes }
 					setGradient={ setGradient }
 					showDesc={ showDesc }
-					bgColorVisibility={ isBgVisible }
+					backgroundColorVisibilityStatus={ backgroundColorVisibilityStatus }
 					backgroundColor={
 						backgroundColor || style?.color?.background
 					}

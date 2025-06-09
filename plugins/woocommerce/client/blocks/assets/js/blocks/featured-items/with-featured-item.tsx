@@ -56,7 +56,7 @@ export interface FeaturedItemRequiredAttributes {
 	editMode: boolean;
 	backgroundColor: string | undefined;
 	style: { color: { background: string } };
-	bgColorVisibility: {
+	backgroundColorVisibilityStatus: {
 		isBackgroundVisible: boolean;
 		message?: string | null;
 	};
@@ -389,7 +389,7 @@ export const withFeaturedItem =
 				<Component
 					{ ...props }
 					backgroundImageSize={ backgroundImageSize }
-					isBgVisible={ backgroundColorVisibilityStatus }
+					backgroundColorVisibilityStatus={ backgroundColorVisibilityStatus }
 				/>
 			);
 		}
@@ -399,7 +399,7 @@ export const withFeaturedItem =
 				<Component
 					{ ...props }
 					backgroundImageSize={ backgroundImageSize }
-					isBgVisible={ backgroundColorVisibilityStatus }
+					backgroundColorVisibilityStatus={ backgroundColorVisibilityStatus }
 				/>
 				{ item ? renderItem() : renderNoItem() }
 			</>
