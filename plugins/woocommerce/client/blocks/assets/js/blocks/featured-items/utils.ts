@@ -101,14 +101,6 @@ export function dimRatioToClass( ratio: number ) {
 /**
  * Determines whether the background color behind an image will be visible,
  * based on the image's transparency, repetition, fit, and container size.
- *
- * @param isImageBgTransparent - Whether the image has transparent pixels.
- * @param originalImgDimension - The original dimensions of the background image.
- * @param parentContainerDimension - The dimensions of the container holding the image.
- * @param isRepeated - Whether the image is set to repeat.
- * @param imageFit - How the image is fitted (e.g., 'cover' or 'none').
- * @return An object indicating whether the background color is visible
- *          and the notice message.
  */
 export const getBackgroundColorVisibilityStatus = ( {
 	isImageBgTransparent,
