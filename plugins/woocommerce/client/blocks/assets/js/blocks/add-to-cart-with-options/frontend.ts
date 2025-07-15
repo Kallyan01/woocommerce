@@ -21,6 +21,7 @@ export type AvailableVariation = {
 export type Context = {
 	productId: number;
 	productType: string;
+	max_cart_qty: number;
 	selectedAttributes: SelectedAttributes[];
 	availableVariations: AvailableVariation[];
 	quantity: Record< number, number >;
@@ -155,19 +156,24 @@ const addToCartWithOptionsStore = store(
 					productType,
 					productId,
 					quantity,
+					max_cart_qty: productMaxCartQty,
 				} = getContext< Context >();
 				if ( productType !== 'variable' ) {
-					return true;
+					const product = wooState.cart?.items.find(
+						( item ) => item.id === productId
+					);
+
+					return productMaxCartQty > ( product?.quantity || 0 );
 				}
 				const matchedVariation = getMatchedVariation(
 					availableVariations,
 					selectedAttributes
 				);
 				const qty = quantity[ productId ];
-				const product = wooState.cart?.items.find(
+				const variableProduct = wooState.cart?.items.find(
 					( item ) => item.id === matchedVariation?.variation_id
 				);
-				const currentQuantity = product?.quantity || 0;
+				const currentQuantity = variableProduct?.quantity || 0;
 				const maxCartQty = matchedVariation?.max_cart_qty || 0;
 
 				// Variable products must be in stock and have a valid selected variation
@@ -198,16 +204,30 @@ const addToCartWithOptionsStore = store(
 				return context.selectedAttributes;
 			},
 			get isAddToCartProductValid(): boolean {
-				const { availableVariations, selectedAttributes } =
-					getContext< Context >();
+				const {
+					availableVariations,
+					selectedAttributes,
+					productType,
+					productId,
+					max_cart_qty: productMaxCartQty,
+				} = getContext< Context >();
+
+				if ( productType !== 'variable' ) {
+					const product = wooState.cart?.items.find(
+						( item ) => item.id === productId
+					);
+
+					return productMaxCartQty >= ( product?.quantity || 0 );
+				}
+
 				const matchedVariation = getMatchedVariation(
 					availableVariations,
 					selectedAttributes
 				);
-				const product = wooState.cart?.items.find(
+				const variableProduct = wooState.cart?.items.find(
 					( item ) => item.id === matchedVariation?.variation_id
 				);
-				const currentQuantity = product?.quantity || 0;
+				const currentQuantity = variableProduct?.quantity || 0;
 				const maxCartQty = matchedVariation?.max_cart_qty || 0;
 
 				return (
