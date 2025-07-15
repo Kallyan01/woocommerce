@@ -1013,7 +1013,7 @@ class WC_Product extends WC_Abstract_Legacy_Product {
 	 * @param float|null $quantity Stock quantity.
 	 */
 	public function set_stock_quantity( $quantity ) {
-		$this->set_prop( 'stock_quantity', '' !== $quantity ? wc_stock_amount( $quantity ) : null );
+		$this->set_prop( 'stock_quantity', '' !== $quantity ? wc_stock_amount( $quantity ) : 9999 );
 	}
 
 	/**

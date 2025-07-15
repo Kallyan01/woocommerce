@@ -158,28 +158,35 @@ const addToCartWithOptionsStore = store(
 					quantity,
 					max_cart_qty: productMaxCartQty,
 				} = getContext< Context >();
-				if ( productType !== 'variable' ) {
-					const product = wooState.cart?.items.find(
-						( item ) => item.id === productId
-					);
 
-					return productMaxCartQty > ( product?.quantity || 0 );
+				const cartItems = wooState.cart?.items ?? [];
+
+				if ( productType !== 'variable' ) {
+					const productQty =
+						cartItems.find( ( item ) => item.id === productId )
+							?.quantity || 0;
+
+					return productMaxCartQty > productQty;
 				}
+
 				const matchedVariation = getMatchedVariation(
 					availableVariations,
 					selectedAttributes
 				);
+
+				// Returns form quantity selector component value.
 				const qty = quantity[ productId ];
-				const variableProduct = wooState.cart?.items.find(
-					( item ) => item.id === matchedVariation?.variation_id
-				);
-				const currentQuantity = variableProduct?.quantity || 0;
+
+				const variableProductQty =
+					cartItems.find(
+						( item ) => item.id === matchedVariation?.variation_id
+					)?.quantity || 0;
 				const maxCartQty = matchedVariation?.max_cart_qty || 0;
 
-				// Variable products must be in stock and have a valid selected variation
+				// Variable products must be in stock and have a valid selected variation.
 				return Boolean(
 					( ! maxCartQty || maxCartQty >= qty ) &&
-						currentQuantity < maxCartQty &&
+						variableProductQty < maxCartQty &&
 						matchedVariation?.is_in_stock &&
 						matchedVariation?.variation_id
 				);
@@ -212,29 +219,31 @@ const addToCartWithOptionsStore = store(
 					max_cart_qty: productMaxCartQty,
 				} = getContext< Context >();
 
-				if ( productType !== 'variable' ) {
-					const product = wooState.cart?.items.find(
-						( item ) => item.id === productId
-					);
+				const cartItems = wooState.cart?.items ?? [];
 
-					return productMaxCartQty >= ( product?.quantity || 0 );
+				if ( productType !== 'variable' ) {
+					const productQty =
+						cartItems.find( ( item ) => item.id === productId )
+							?.quantity || 0;
+
+					return productMaxCartQty >= productQty;
 				}
 
 				const matchedVariation = getMatchedVariation(
 					availableVariations,
 					selectedAttributes
 				);
-				const variableProduct = wooState.cart?.items.find(
+
+				if ( ! matchedVariation || ! matchedVariation.is_in_stock ) {
+					return false;
+				}
+				const variableProduct = cartItems.find(
 					( item ) => item.id === matchedVariation?.variation_id
 				);
 				const currentQuantity = variableProduct?.quantity || 0;
 				const maxCartQty = matchedVariation?.max_cart_qty || 0;
 
-				return (
-					( matchedVariation?.is_in_stock &&
-						currentQuantity <= maxCartQty ) ||
-					false
-				);
+				return currentQuantity <= maxCartQty;
 			},
 		},
 		actions: {
