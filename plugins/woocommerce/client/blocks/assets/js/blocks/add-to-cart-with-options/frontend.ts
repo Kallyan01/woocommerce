@@ -15,6 +15,7 @@ export type AvailableVariation = {
 	variation_id: number;
 	price_html: string;
 	is_in_stock: boolean;
+	max_cart_qty: number;
 };
 
 export type Context = {
@@ -148,8 +149,13 @@ const addToCartWithOptionsStore = store(
 	{
 		state: {
 			get isFormValid(): boolean {
-				const { availableVariations, selectedAttributes, productType } =
-					getContext< Context >();
+				const {
+					availableVariations,
+					selectedAttributes,
+					productType,
+					productId,
+					quantity,
+				} = getContext< Context >();
 				if ( productType !== 'variable' ) {
 					return true;
 				}
@@ -157,10 +163,18 @@ const addToCartWithOptionsStore = store(
 					availableVariations,
 					selectedAttributes
 				);
+				const qty = quantity[ productId ];
+				const product = wooState.cart?.items.find(
+					( item ) => item.id === matchedVariation?.variation_id
+				);
+				const currentQuantity = product?.quantity || 0;
+				const maxCartQty = matchedVariation?.max_cart_qty || 0;
 
-				// Variable products must be in stock and have a selected variation
+				// Variable products must be in stock and have a valid selected variation
 				return Boolean(
-					matchedVariation?.is_in_stock &&
+					( ! maxCartQty || maxCartQty >= qty ) &&
+						currentQuantity < maxCartQty &&
+						matchedVariation?.is_in_stock &&
 						matchedVariation?.variation_id
 				);
 			},
@@ -182,6 +196,25 @@ const addToCartWithOptionsStore = store(
 					return [];
 				}
 				return context.selectedAttributes;
+			},
+			get isAddToCartProductValid(): boolean {
+				const { availableVariations, selectedAttributes } =
+					getContext< Context >();
+				const matchedVariation = getMatchedVariation(
+					availableVariations,
+					selectedAttributes
+				);
+				const product = wooState.cart?.items.find(
+					( item ) => item.id === matchedVariation?.variation_id
+				);
+				const currentQuantity = product?.quantity || 0;
+				const maxCartQty = matchedVariation?.max_cart_qty || 0;
+
+				return (
+					( matchedVariation?.is_in_stock &&
+						currentQuantity <= maxCartQty ) ||
+					false
+				);
 			},
 		},
 		actions: {
