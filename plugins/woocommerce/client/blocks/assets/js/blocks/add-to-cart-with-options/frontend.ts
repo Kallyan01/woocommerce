@@ -150,6 +150,10 @@ const addToCartWithOptionsStore = store(
 	{
 		state: {
 			get isFormValid(): boolean {
+				const context = getContext< Context >();
+				if ( ! context ) {
+					return true;
+				}
 				const {
 					availableVariations,
 					selectedAttributes,
@@ -157,14 +161,14 @@ const addToCartWithOptionsStore = store(
 					productId,
 					quantity,
 					max_cart_qty: productMaxCartQty,
-				} = getContext< Context >();
+				} = context;
 
 				const cartItems = wooState.cart?.items ?? [];
 
 				// Returns form quantity selector component value.
 				const qty = quantity[ productId ];
 
-				if ( productType !== 'variable' ) {
+				if ( productType === 'simple' ) {
 					const productQty =
 						cartItems.find( ( item ) => item.id === productId )
 							?.quantity || 0;
@@ -172,25 +176,35 @@ const addToCartWithOptionsStore = store(
 					return productMaxCartQty >= qty + productQty;
 				}
 
-				const matchedVariation = getMatchedVariation(
-					availableVariations,
-					selectedAttributes
-				);
+				if ( productType === 'variable' ) {
+					const matchedVariation = getMatchedVariation(
+						availableVariations,
+						selectedAttributes
+					);
 
-				const variableProductQty =
-					cartItems.find(
-						( item ) => item.id === matchedVariation?.variation_id
-					)?.quantity || 0;
-				const maxCartQty = matchedVariation?.max_cart_qty || 0;
+					const variableProductQty =
+						cartItems.find(
+							( item ) =>
+								item.id === matchedVariation?.variation_id
+						)?.quantity || 0;
+					const maxCartQty = matchedVariation?.max_cart_qty || 0;
 
-				// Variable products must be in stock and have a valid selected variation.
-				return Boolean(
-					( ! maxCartQty ||
-						maxCartQty >= qty + variableProductQty ) &&
-						variableProductQty < maxCartQty &&
-						matchedVariation?.is_in_stock &&
-						matchedVariation?.variation_id
-				);
+					// Variable products must be in stock and have a valid selected variation.
+					return Boolean(
+						( ! maxCartQty ||
+							maxCartQty >= qty + variableProductQty ) &&
+							variableProductQty < maxCartQty &&
+							matchedVariation?.is_in_stock &&
+							matchedVariation?.variation_id
+					);
+				}
+
+				if ( productType === 'grouped' ) {
+					return Object.values( quantity ).some(
+						( itemqty ) => itemqty > 0
+					);
+				}
+				return true;
 			},
 			get variationId(): number | null {
 				const context = getContext< Context >();
