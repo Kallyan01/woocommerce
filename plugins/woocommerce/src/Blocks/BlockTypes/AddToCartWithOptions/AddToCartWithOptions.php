@@ -225,6 +225,7 @@ class AddToCartWithOptions extends AbstractBlock {
 				'productType'  => $product->get_type(),
 				'quantity'     => array( $product->get_id() => $default_quantity ),
 				'max_cart_qty' => $product->get_stock_quantity() ?? 9999,
+				'quantityConstraints' => array(),
 			);
 
 			if ( $product->is_type( 'variable' ) ) {
@@ -252,6 +253,22 @@ class AddToCartWithOptions extends AbstractBlock {
 					$child_product = wc_get_product( $child_product_id );
 					if ( $child_product && $this->is_child_product_purchasable( $child_product ) ) {
 						$context['groupedProductIds'][] = $child_product_id;
+
+						$args = Utils::get_quantity_input_args( $child_product );
+						$min  = isset( $args['min_value'] ) ? (int) $args['min_value'] : 0;
+						// For grouped children, if min is 1 (the default), set to 0 unless a filter sets otherwise.
+						if ( 1 === $min ) {
+							$min = 0;
+						}
+						$max  = ( isset( $args['max_value'] ) && '' !== $args['max_value'] && -1 !== $args['max_value'] )
+							? (int) $args['max_value']
+							: null;
+						$step = isset( $args['step'] ) ? (int) $args['step'] : 1;
+						$context['quantityConstraints'][ $child_product_id ] = array(
+							'min'  => $min,
+							'max'  => $max,
+							'step' => $step,
+						);
 					}
 				}
 
@@ -276,6 +293,20 @@ class AddToCartWithOptions extends AbstractBlock {
 						}
 					}
 				}
+			} else {
+				// Not grouped: just add constraints for the main product.
+				$args = Utils::get_quantity_input_args( $product );
+				$min  = isset( $args['min_value'] ) ? (int) $args['min_value'] : 1;
+				$max  = ( isset( $args['max_value'] ) && '' !== $args['max_value'] && -1 !== $args['max_value'] )
+				? (int) $args['max_value']
+				: null;
+				$step = isset( $args['step'] ) ? (int) $args['step'] : 1;
+
+				$context['quantityConstraints'][ $product->get_id() ] = array(
+					'min'  => $min,
+					'max'  => $max,
+					'step' => $step,
+				);
 			}
 
 			$hooks_before = '';
