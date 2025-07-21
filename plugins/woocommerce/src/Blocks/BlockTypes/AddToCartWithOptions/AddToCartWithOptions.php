@@ -181,7 +181,7 @@ class AddToCartWithOptions extends AbstractBlock {
 			/**
 			 * Filter the default quantity to add to cart.
 			 *
-			 * @since 10.9.0
+			 * @since 10.0.0
 			 * @param number $default_quantity The default quantity.
 			 * @param number $product_id The product id.
 			 */
@@ -199,6 +199,24 @@ class AddToCartWithOptions extends AbstractBlock {
 						return true;
 					},
 					'variationId' => null,
+				)
+			);
+
+			wp_interactivity_state(
+				'woocommerce',
+				array(
+					// Use camelCase for error messages generated from the frontend,
+					// and snake_case for error messages generated from the backend.
+					'errorMessages' => array(
+						'groupedProductAddToCartMissingItems' => __(
+							'Please select some products to add to the cart.',
+							'woocommerce'
+						),
+						'woocommerce_rest_missing_attributes' => __(
+							'Please select product attributes before adding to cart.',
+							'woocommerce'
+						),
+					),
 				)
 			);
 

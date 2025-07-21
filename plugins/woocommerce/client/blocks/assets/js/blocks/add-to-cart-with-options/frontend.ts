@@ -9,6 +9,7 @@ import type {
 } from '@woocommerce/stores/woocommerce/cart';
 import '@woocommerce/stores/woocommerce/product-data';
 import type { ProductDataStore } from '@woocommerce/stores/woocommerce/product-data';
+import type { Store as StoreNotices } from '@woocommerce/stores/store-notices';
 
 export type AvailableVariation = {
 	attributes: Record< string, string >;
@@ -141,7 +142,7 @@ const getNewQuantity = ( productId: number, quantity: number ) => {
 };
 
 const dispatchChangeEvent = ( inputElement: HTMLInputElement ) => {
-	const event = new Event( 'change' );
+	const event = new Event( 'change', { bubbles: true } );
 	inputElement.dispatchEvent( event );
 };
 
@@ -452,6 +453,30 @@ const addToCartWithOptionsStore = store(
 					}
 
 					if ( addedItems.length === 0 ) {
+						// Todo: Use the module exports instead of `store()` once the store-notices
+						// store is public.
+						yield import( '@woocommerce/stores/store-notices' );
+						const { actions: noticeActions } =
+							store< StoreNotices >(
+								'woocommerce/store-notices',
+								{},
+								{
+									lock: 'I acknowledge that using a private store means my plugin will inevitably break on the next store release.',
+								}
+							);
+
+						const errorMessage =
+							wooState?.errorMessages
+								?.groupedProductAddToCartMissingItems;
+
+						if ( errorMessage ) {
+							noticeActions.addNotice( {
+								notice: errorMessage,
+								type: 'error',
+								dismissible: true,
+							} );
+						}
+
 						return;
 					}
 
