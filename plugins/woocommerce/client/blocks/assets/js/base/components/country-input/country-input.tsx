@@ -4,6 +4,7 @@
 import { useMemo } from '@wordpress/element';
 import { decodeEntities } from '@wordpress/html-entities';
 import clsx from 'clsx';
+import { COUNTRIES } from '@woocommerce/block-settings';
 
 /**
  * Internal dependencies
@@ -32,15 +33,22 @@ export const CountryInput = ( {
 		);
 	}, [ countries ] );
 
+	const getDefaultCountryValue = ( defaultCountry: string ) => {
+		if ( COUNTRIES[ defaultCountry ] ) {
+			return defaultCountry;
+		}
+		return '';
+	};
+
 	return (
 		<Select
 			className={ clsx( className, 'wc-block-components-country-input' ) }
 			id={ id }
-			errorId={ errorId }
+			errorId={ errorId || '' }
 			label={ label || '' }
 			onChange={ onChange }
 			options={ options }
-			value={ value }
+			value={ getDefaultCountryValue( String( value ) ) }
 			required={ required }
 			autoComplete={ autoComplete }
 		/>
