@@ -1,0 +1,4 @@
+Significance: minor
+Type: fix
+
+Handled checkout page country-selector value mismatch issue
