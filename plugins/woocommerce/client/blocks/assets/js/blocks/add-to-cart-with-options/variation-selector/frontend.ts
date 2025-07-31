@@ -173,13 +173,19 @@ const { actions, state } = store< VariableProductAddToCartWithOptionsStore >(
 				} = context;
 
 				const cartItems = wooState.cart?.items ?? [];
-				// Returns form quantity selector component value.
-				const qty = quantity[ productId ];
 
 				const matchedVariation = getMatchedVariation(
 					availableVariations,
 					selectedAttributes
 				);
+
+				// Returns form quantity selector component value.
+				const qty =
+					quantity[ matchedVariation?.variation_id ?? productId ];
+
+				if ( matchedVariation?.max_cart_qty === null ) {
+					return true;
+				}
 
 				const variableProductQty =
 					cartItems.find(
@@ -191,7 +197,6 @@ const { actions, state } = store< VariableProductAddToCartWithOptionsStore >(
 				return Boolean(
 					( ! maxCartQty ||
 						maxCartQty >= qty + variableProductQty ) &&
-						variableProductQty < maxCartQty &&
 						matchedVariation?.variation_id
 				);
 			},

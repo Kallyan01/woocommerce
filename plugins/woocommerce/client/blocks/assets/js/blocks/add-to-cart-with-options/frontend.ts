@@ -199,11 +199,15 @@ const addToCartWithOptionsStore = store<
 				const qty = quantity[ productId ];
 
 				if ( productType === 'simple' ) {
-					const productQty =
-						cartItems.find( ( item ) => item.id === productId )
-							?.quantity || 0;
+					if ( productMaxCartQty === null ) {
+						return true;
+					} else {
+						const productQty =
+							cartItems.find( ( item ) => item.id === productId )
+								?.quantity || 0;
 
-					return productMaxCartQty >= qty + productQty;
+						return productMaxCartQty >= qty + productQty;
+					}
 				}
 
 				if ( productType === 'variable' ) {
@@ -214,7 +218,9 @@ const addToCartWithOptionsStore = store<
 				}
 
 				if ( productType === 'grouped' ) {
-					return Object.values( quantity ).some( ( itemQty ) => itemQty > 0 );
+					return Object.values( quantity ).some(
+						( itemQty ) => itemQty > 0
+					);
 				}
 
 				return true;
@@ -237,41 +243,6 @@ const addToCartWithOptionsStore = store<
 					return [];
 				}
 				return context.selectedAttributes;
-			},
-			get isAddToCartProductValid(): boolean {
-				const {
-					availableVariations,
-					selectedAttributes,
-					productType,
-					productId,
-					max_cart_qty: productMaxCartQty,
-				} = getContext< Context >();
-
-				const cartItems = wooState.cart?.items ?? [];
-
-				if ( productType !== 'variable' ) {
-					const productQty =
-						cartItems.find( ( item ) => item.id === productId )
-							?.quantity || 0;
-
-					return productMaxCartQty >= productQty;
-				}
-
-				const matchedVariation = getMatchedVariation(
-					availableVariations,
-					selectedAttributes
-				);
-
-				if ( ! matchedVariation || ! matchedVariation.is_in_stock ) {
-					return false;
-				}
-				const variableProduct = cartItems.find(
-					( item ) => item.id === matchedVariation?.variation_id
-				);
-				const currentQuantity = variableProduct?.quantity || 0;
-				const maxCartQty = matchedVariation?.max_cart_qty || 0;
-
-				return currentQuantity <= maxCartQty;
 			},
 			get allowsDecrease() {
 				const {
