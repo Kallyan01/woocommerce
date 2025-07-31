@@ -8,16 +8,17 @@ import type {
 	SelectedAttributes,
 } from '@woocommerce/stores/woocommerce/cart';
 import '@woocommerce/stores/woocommerce/product-data';
-import type { ProductDataStore } from '@woocommerce/stores/woocommerce/product-data';
 import type { Store as StoreNotices } from '@woocommerce/stores/store-notices';
 
-export type AvailableVariation = {
-	attributes: Record< string, string >;
-	variation_id: number;
-	price_html: string;
-	is_in_stock: boolean;
-	max_cart_qty: number;
-};
+/**
+ * Internal dependencies
+ */
+import {
+	getMatchedVariation,
+	type AvailableVariation,
+} from '../../base/utils/variations/get-matched-variation';
+import { doesCartItemMatchAttributes } from '../../base/utils/variations/does-cart-item-match-attributes';
+import type { VariableProductAddToCartWithOptionsStore } from './variation-selector/frontend';
 
 export type Context = {
 	productId: number;
@@ -113,47 +114,30 @@ const getInputData = (
 	};
 };
 
-const getMatchedVariation = (
-	availableVariations: AvailableVariation[],
-	selectedAttributes: SelectedAttributes[]
+const getNewQuantity = (
+	productId: number,
+	quantity: number,
+	variation?: SelectedAttributes[]
 ) => {
-	if (
-		! Array.isArray( availableVariations ) ||
-		! Array.isArray( selectedAttributes ) ||
-		availableVariations.length === 0 ||
-		selectedAttributes.length === 0
-	) {
-		return null;
-	}
-	return availableVariations.find( ( availableVariation ) => {
-		return Object.entries( availableVariation.attributes ).every(
-			( [ attributeName, attributeValue ] ) => {
-				const attributeMatched = selectedAttributes.some(
-					( variationAttribute ) => {
-						const isSameAttribute =
-							variationAttribute.attribute === attributeName;
-						if ( ! isSameAttribute ) {
-							return false;
-						}
-
-						return (
-							variationAttribute.value === attributeValue ||
-							( variationAttribute.value &&
-								attributeValue === '' )
-						);
-					}
-				);
-
-				return attributeMatched;
+	const product = wooState.cart?.items.find( ( item ) => {
+		if ( item.type === 'variation' ) {
+			// If it's a variation, check that attributes match.
+			// While different variations have different attributes,
+			// some variations might accept 'Any' value for an attribute,
+			// in which case, we need to check that the attributes match.
+			if (
+				item.id !== productId ||
+				! item.variation ||
+				! variation ||
+				item.variation.length !== variation.length
+			) {
+				return false;
 			}
-		);
-	} );
-};
+			return doesCartItemMatchAttributes( item, variation );
+		}
 
-const getNewQuantity = ( productId: number, quantity: number ) => {
-	const product = wooState.cart?.items.find(
-		( item ) => item.id === productId
-	);
+		return item.id === productId;
+	} );
 	const currentQuantity = product?.quantity || 0;
 	return currentQuantity + quantity;
 };
@@ -163,7 +147,37 @@ const dispatchChangeEvent = ( inputElement: HTMLInputElement ) => {
 	inputElement.dispatchEvent( event );
 };
 
-const addToCartWithOptionsStore = store(
+export type AddToCartWithOptionsStore = {
+	state: {
+		isFormValid: boolean;
+		allowsDecrease: boolean;
+		allowsIncrease: boolean;
+	};
+	actions: {
+		setQuantity: ( value: number, childProductId?: number ) => void;
+		increaseQuantity: (
+			event: HTMLElementEvent< HTMLButtonElement >
+		) => void;
+		decreaseQuantity: (
+			event: HTMLElementEvent< HTMLButtonElement >
+		) => void;
+		handleQuantityInput: (
+			event: HTMLElementEvent< HTMLInputElement >
+		) => void;
+		handleQuantityChange: (
+			event: HTMLElementEvent< HTMLInputElement >
+		) => void;
+		handleQuantityCheckboxChange: (
+			event: HTMLElementEvent< HTMLInputElement >
+		) => void;
+		handleSubmit: ( event: FormEvent< HTMLFormElement > ) => void;
+	};
+};
+
+const addToCartWithOptionsStore = store<
+	AddToCartWithOptionsStore &
+		Partial< VariableProductAddToCartWithOptionsStore >
+>(
 	'woocommerce/add-to-cart-with-options',
 	{
 		state: {
@@ -172,56 +186,22 @@ const addToCartWithOptionsStore = store(
 				if ( ! context ) {
 					return true;
 				}
-				const {
-					availableVariations,
-					selectedAttributes,
-					productType,
-					productId,
-					quantity,
-					max_cart_qty: productMaxCartQty,
-				} = context;
 
-				const cartItems = wooState.cart?.items ?? [];
-
-				// Returns form quantity selector component value.
-				const qty = quantity[ productId ];
-
-				if ( productType === 'simple' ) {
-					const productQty =
-						cartItems.find( ( item ) => item.id === productId )
-							?.quantity || 0;
-
-					return productMaxCartQty >= qty + productQty;
-				}
+				const { productType, quantity } = context;
 
 				if ( productType === 'variable' ) {
-					const matchedVariation = getMatchedVariation(
-						availableVariations,
-						selectedAttributes
-					);
-
-					const variableProductQty =
-						cartItems.find(
-							( item ) =>
-								item.id === matchedVariation?.variation_id
-						)?.quantity || 0;
-					const maxCartQty = matchedVariation?.max_cart_qty || 0;
-
-					// Variable products must be in stock and have a valid selected variation.
-					return Boolean(
-						( ! maxCartQty ||
-							maxCartQty >= qty + variableProductQty ) &&
-							variableProductQty < maxCartQty &&
-							matchedVariation?.is_in_stock &&
-							matchedVariation?.variation_id
+					return (
+						addToCartWithOptionsStore?.state
+							?.isVariableProductFormValid ?? true
 					);
 				}
 
 				if ( productType === 'grouped' ) {
 					return Object.values( quantity ).some(
-						( itemqty ) => itemqty > 0
+						( qty ) => qty > 0
 					);
 				}
+
 				return true;
 			},
 			get variationId(): number | null {
@@ -285,8 +265,19 @@ const addToCartWithOptionsStore = store(
 					productType,
 					quantityConstraints,
 					productId,
+					availableVariations,
+					selectedAttributes,
 				} = getContext< Context >();
-				const id = childProductId || productId;
+
+				const matchedVariation = getMatchedVariation(
+					availableVariations,
+					selectedAttributes
+				);
+
+				const id =
+					matchedVariation?.variation_id ||
+					childProductId ||
+					productId;
 				const currentQuantity = quantity[ id ] || 0;
 				const constraints =
 					quantityConstraints?.[ id ] ||
@@ -302,8 +293,19 @@ const addToCartWithOptionsStore = store(
 					productType,
 					quantityConstraints,
 					productId,
+					availableVariations,
+					selectedAttributes,
 				} = getContext< Context >();
-				const id = childProductId || productId;
+
+				const matchedVariation = getMatchedVariation(
+					availableVariations,
+					selectedAttributes
+				);
+
+				const id =
+					matchedVariation?.variation_id ||
+					childProductId ||
+					productId;
 				const currentQuantity = quantity[ id ] || 0;
 				const constraints =
 					quantityConstraints?.[ id ] ||
@@ -316,40 +318,24 @@ const addToCartWithOptionsStore = store(
 		actions: {
 			setQuantity( value: number, childProductId?: number ) {
 				const context = getContext< Context >();
-				const productId = childProductId || context.productId;
 
-				context.quantity = {
-					...context.quantity,
-					[ productId ]: value,
-				};
-			},
-			setAttribute( attribute: string, value: string ) {
-				const { selectedAttributes } = getContext< Context >();
-				const index = selectedAttributes.findIndex(
-					( selectedAttribute ) =>
-						selectedAttribute.attribute === attribute
-				);
+				if ( context.productType === 'variable' ) {
+					// Set the quantity for all variations, so when switching
+					// variations the quantity persists.
+					const variationIds = context.availableVariations.map(
+						( variation ) => variation.variation_id
+					);
 
-				if ( index >= 0 ) {
-					selectedAttributes[ index ] = {
-						attribute,
-						value,
-					};
-				} else {
-					selectedAttributes.push( {
-						attribute,
-						value,
+					variationIds.forEach( ( id ) => {
+						context.quantity[ id ] = value;
 					} );
-				}
-			},
-			removeAttribute( attribute: string ) {
-				const { selectedAttributes } = getContext< Context >();
-				const index = selectedAttributes.findIndex(
-					( selectedAttribute ) =>
-						selectedAttribute.attribute === attribute
-				);
-				if ( index >= 0 ) {
-					selectedAttributes.splice( index, 1 );
+				} else {
+					const id = childProductId || context.productId;
+
+					context.quantity = {
+						...context.quantity,
+						[ id ]: value,
+					};
 				}
 			},
 			increaseQuantity: (
@@ -536,9 +522,12 @@ const addToCartWithOptionsStore = store(
 
 					yield actions.batchAddCartItems( addedItems );
 				} else {
+					const { variationId } = addToCartWithOptionsStore.state;
+					const id = variationId || productId;
 					const newQuantity = getNewQuantity(
-						productId,
-						quantity[ productId ]
+						id,
+						quantity[ id ],
+						selectedAttributes
 					);
 
 					const { actions } = store< WooCommerce >(
@@ -546,9 +535,8 @@ const addToCartWithOptionsStore = store(
 						{},
 						{ lock: universalLock }
 					);
-
 					yield actions.addCartItem( {
-						id: productId,
+						id,
 						quantity: newQuantity,
 						variation: selectedAttributes,
 						type: productType,
@@ -556,33 +544,6 @@ const addToCartWithOptionsStore = store(
 				}
 			},
 		},
-		callbacks: {
-			setProductData: () => {
-				const { availableVariations, selectedAttributes } =
-					getContext< Context >();
-				const matchedVariation = getMatchedVariation(
-					availableVariations,
-					selectedAttributes
-				);
-
-				const { actions } = store< ProductDataStore >(
-					'woocommerce/product-data',
-					{},
-					{ lock: universalLock }
-				);
-
-				if ( matchedVariation ) {
-					actions.setProductData(
-						'price_html',
-						matchedVariation.price_html
-					);
-				} else {
-					actions.setProductData( 'price_html', null );
-				}
-			},
-		},
 	},
 	{ lock: true }
 );
-
-export type AddToCartWithOptionsStore = typeof addToCartWithOptionsStore;
