@@ -2,7 +2,10 @@
  * External dependencies
  */
 import { store, getContext } from '@wordpress/interactivity';
-import { SelectedAttributes } from '@woocommerce/stores/woocommerce/cart';
+import {
+	SelectedAttributes,
+	Store as WooCommerce,
+} from '@woocommerce/stores/woocommerce/cart';
 import type { ChangeEvent } from 'react';
 import type { ProductDataStore } from '@woocommerce/stores/woocommerce/product-data';
 
@@ -147,6 +150,12 @@ export type VariableProductAddToCartWithOptionsStore =
 		};
 	};
 
+const { state: wooState } = store< WooCommerce >(
+	'woocommerce',
+	{},
+	{ lock: universalLock }
+);
+
 const { actions, state } = store< VariableProductAddToCartWithOptionsStore >(
 	'woocommerce/add-to-cart-with-options',
 	{
@@ -156,16 +165,33 @@ const { actions, state } = store< VariableProductAddToCartWithOptionsStore >(
 				if ( ! context ) {
 					return true;
 				}
-				const { availableVariations, selectedAttributes } = context;
+				const {
+					availableVariations,
+					selectedAttributes,
+					quantity,
+					productId,
+				} = context;
+
+				const cartItems = wooState.cart?.items ?? [];
+				// Returns form quantity selector component value.
+				const qty = quantity[ productId ];
 
 				const matchedVariation = getMatchedVariation(
 					availableVariations,
 					selectedAttributes
 				);
 
+				const variableProductQty =
+					cartItems.find(
+						( item ) => item.id === matchedVariation?.variation_id
+					)?.quantity || 0;
+				const maxCartQty = matchedVariation?.max_cart_qty || 0;
+
 				// Variable products must be in stock and have a selected variation
 				return Boolean(
-					matchedVariation?.is_in_stock &&
+					( ! maxCartQty ||
+						maxCartQty >= qty + variableProductQty ) &&
+						variableProductQty < maxCartQty &&
 						matchedVariation?.variation_id
 				);
 			},

@@ -187,7 +187,24 @@ const addToCartWithOptionsStore = store<
 					return true;
 				}
 
-				const { productType, quantity } = context;
+				const {
+					productType,
+					quantity,
+					max_cart_qty: productMaxCartQty,
+					productId,
+				} = context;
+				const cartItems = wooState.cart?.items ?? [];
+
+				// Returns form quantity selector component value.
+				const qty = quantity[ productId ];
+
+				if ( productType === 'simple' ) {
+					const productQty =
+						cartItems.find( ( item ) => item.id === productId )
+							?.quantity || 0;
+
+					return productMaxCartQty >= qty + productQty;
+				}
 
 				if ( productType === 'variable' ) {
 					return (
@@ -197,9 +214,7 @@ const addToCartWithOptionsStore = store<
 				}
 
 				if ( productType === 'grouped' ) {
-					return Object.values( quantity ).some(
-						( qty ) => qty > 0
-					);
+					return Object.values( quantity ).some( ( itemQty ) => itemQty > 0 );
 				}
 
 				return true;

@@ -224,7 +224,7 @@ class AddToCartWithOptions extends AbstractBlock {
 				'productId'    => $product->get_id(),
 				'productType'  => $product->get_type(),
 				'quantity'     => array( $product->get_id() => $default_quantity ),
-				'max_cart_qty' => $product->get_stock_quantity() ?? 9999,
+				'max_cart_qty' => $product->get_stock_quantity(),
 				'quantityConstraints' => array(),
 			);
 
@@ -245,7 +245,7 @@ class AddToCartWithOptions extends AbstractBlock {
 						'variation_id' => $variation->get_id(),
 						'attributes'   => $variation->get_variation_attributes(),
 						'is_in_stock'  => $variation->is_in_stock(),
-						'max_cart_qty' => $variation['max_qty'],
+						'max_cart_qty' => $variation->get_stock_quantity(),
 					);
 				}
 			}
