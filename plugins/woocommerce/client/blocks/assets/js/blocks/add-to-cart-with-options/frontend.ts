@@ -242,25 +242,6 @@ const addToCartWithOptionsStore = store<
 
 				return true;
 			},
-			get variationId(): number | null {
-				const context = getContext< Context >();
-				if ( ! context ) {
-					return null;
-				}
-				const { availableVariations, selectedAttributes } = context;
-				const matchedVariation = getMatchedVariation(
-					availableVariations,
-					selectedAttributes
-				);
-				return matchedVariation?.variation_id || null;
-			},
-			get selectedAttributes(): SelectedAttributes[] {
-				const context = getContext< Context >();
-				if ( ! context ) {
-					return [];
-				}
-				return context.selectedAttributes;
-			},
 			get allowsDecrease() {
 				const {
 					quantity,

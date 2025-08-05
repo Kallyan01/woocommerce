@@ -200,6 +200,25 @@ const { actions, state } = store< VariableProductAddToCartWithOptionsStore >(
 						matchedVariation?.variation_id
 				);
 			},
+			get variationId(): number | null {
+				const context = getContext< Context >();
+				if ( ! context ) {
+					return null;
+				}
+				const { availableVariations, selectedAttributes } = context;
+				const matchedVariation = getMatchedVariation(
+					availableVariations,
+					selectedAttributes
+				);
+				return matchedVariation?.variation_id || null;
+			},
+			get selectedAttributes(): SelectedAttributes[] {
+				const context = getContext< Context >();
+				if ( ! context ) {
+					return [];
+				}
+				return context.selectedAttributes;
+			},
 			get isOptionSelected() {
 				const { selectedValue, option } = getContext< Context >();
 				return selectedValue === option.value;
