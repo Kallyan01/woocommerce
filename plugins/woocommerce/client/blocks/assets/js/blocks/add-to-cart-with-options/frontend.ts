@@ -201,13 +201,12 @@ const addToCartWithOptionsStore = store<
 				if ( productType === 'simple' ) {
 					if ( productMaxCartQty === null ) {
 						return true;
-					} else {
-						const productQty =
-							cartItems.find( ( item ) => item.id === productId )
-								?.quantity || 0;
-
-						return productMaxCartQty >= qty + productQty;
 					}
+					const productQty =
+						cartItems.find( ( item ) => item.id === productId )
+							?.quantity || 0;
+
+					return productMaxCartQty >= qty + productQty;
 				}
 
 				if ( productType === 'variable' ) {
