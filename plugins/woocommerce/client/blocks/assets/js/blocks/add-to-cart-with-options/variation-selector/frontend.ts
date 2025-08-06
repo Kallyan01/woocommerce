@@ -183,8 +183,8 @@ const { actions, state } = store< VariableProductAddToCartWithOptionsStore >(
 					selectedAttributes
 				);
 
-				if ( ! productObject ) {
-					return true;
+				if ( ! productObject?.id ) {
+					return false;
 				}
 
 				const { max: productMaxCartQty, id } = productObject;
