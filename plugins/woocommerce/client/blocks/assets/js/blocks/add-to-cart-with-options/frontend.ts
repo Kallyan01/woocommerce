@@ -6,7 +6,6 @@ import { store, getContext } from '@wordpress/interactivity';
 import type {
 	Store as WooCommerce,
 	SelectedAttributes,
-	ProductData,
 } from '@woocommerce/stores/woocommerce/cart';
 import '@woocommerce/stores/woocommerce/product-data';
 import type { Store as StoreNotices } from '@woocommerce/stores/store-notices';
@@ -14,12 +13,10 @@ import type { Store as StoreNotices } from '@woocommerce/stores/store-notices';
 /**
  * Internal dependencies
  */
-import {
-	getMatchedVariation,
-	type AvailableVariation,
-} from '../../base/utils/variations/get-matched-variation';
+import { type AvailableVariation } from '../../base/utils/variations/get-matched-variation';
 import { doesCartItemMatchAttributes } from '../../base/utils/variations/does-cart-item-match-attributes';
 import type { VariableProductAddToCartWithOptionsStore } from './variation-selector/frontend';
+import { getProductData } from '../../base/utils/get-product-data';
 
 export type Context = {
 	productId: number;
@@ -64,54 +61,6 @@ const getInputElementFromEvent = (
 	}
 
 	return inputElement;
-};
-
-const getProductData = (
-	id: number,
-	productType: string,
-	availableVariations: AvailableVariation[],
-	selectedAttributes: SelectedAttributes[]
-): ( ProductData & { id: number } ) | null => {
-	let productId = id;
-	let productData: ProductData | undefined;
-
-	if ( productType === 'variable' ) {
-		const matchedVariation = getMatchedVariation(
-			availableVariations,
-			selectedAttributes
-		);
-		if ( matchedVariation?.variation_id ) {
-			productId = matchedVariation.variation_id;
-			productData =
-				wooState?.products?.[ id ]?.variations?.[
-					matchedVariation?.variation_id
-				];
-		}
-	} else {
-		productData = wooState?.products?.[ productId ];
-	}
-
-	if ( typeof productData !== 'object' || productData === null ) {
-		return null;
-	}
-
-	// Add default quantity constraint values.
-	const defaultMinValue = productType === 'grouped' ? 0 : 1;
-	const min =
-		typeof productData.min === 'number' ? productData.min : defaultMinValue;
-	const max =
-		typeof productData.max === 'number' && productData.max >= 1
-			? productData.max
-			: Infinity;
-	const step = productData.step || 1;
-
-	return {
-		id: productId,
-		...productData,
-		min,
-		max,
-		step,
-	};
 };
 
 const getInputData = (
@@ -205,19 +154,26 @@ const addToCartWithOptionsStore = store<
 					return true;
 				}
 
-				const {
-					productType,
-					quantity,
-					max_cart_qty: productMaxCartQty,
-					productId,
-				} = context;
+				const { productType, quantity, productId } = context;
 				const cartItems = wooState.cart?.items ?? [];
 
-				// Returns form quantity selector component value.
-				const qty = quantity[ productId ];
-
 				if ( productType === 'simple' ) {
-					if ( productMaxCartQty === null ) {
+					const productObject = getProductData(
+						productId,
+						productType,
+						[],
+						[]
+					);
+
+					if ( ! productObject ) {
+						return false;
+					}
+
+					const { max: productMaxCartQty } = productObject;
+
+					// Returns form quantity selector component value.
+					const qty = quantity[ productId ];
+					if ( ! productMaxCartQty ) {
 						return true;
 					}
 					const productQty =

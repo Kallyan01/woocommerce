@@ -16,6 +16,8 @@ import type {
 	AddToCartWithOptionsStore,
 	Context as AddToCartWithOptionsStoreContext,
 } from '../frontend';
+import { getProductData } from '../../../base/utils/get-product-data';
+
 import {
 	getMatchedVariation,
 	type AvailableVariation,
@@ -170,34 +172,41 @@ const { actions, state } = store< VariableProductAddToCartWithOptionsStore >(
 					selectedAttributes,
 					quantity,
 					productId,
+					childProductId,
+					productType,
 				} = context;
 
-				const cartItems = wooState.cart?.items ?? [];
-
-				const matchedVariation = getMatchedVariation(
+				const productObject = getProductData(
+					childProductId || productId,
+					productType,
 					availableVariations,
 					selectedAttributes
 				);
 
-				// Returns form quantity selector component value.
-				const qty =
-					quantity[ matchedVariation?.variation_id ?? productId ];
+				if ( ! productObject ) {
+					return true;
+				}
 
-				if ( matchedVariation?.max_cart_qty === null ) {
+				const { max: productMaxCartQty, id } = productObject;
+
+				const cartItems = wooState.cart?.items ?? [];
+
+				// Returns form quantity selector component value.
+				const qty = quantity[ id ?? productId ];
+
+				if ( ! productMaxCartQty ) {
 					return true;
 				}
 
 				const variableProductQty =
-					cartItems.find(
-						( item ) => item.id === matchedVariation?.variation_id
-					)?.quantity || 0;
-				const maxCartQty = matchedVariation?.max_cart_qty || 0;
+					cartItems.find( ( item ) => item.id === id )?.quantity || 0;
+				const maxCartQty = productMaxCartQty || 0;
 
 				// Variable products must be in stock and have a selected variation
 				return Boolean(
 					( ! maxCartQty ||
 						maxCartQty >= qty + variableProductQty ) &&
-						matchedVariation?.variation_id
+						id
 				);
 			},
 			get variationId(): number | null {
