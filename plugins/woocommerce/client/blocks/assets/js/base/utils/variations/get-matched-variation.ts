@@ -8,7 +8,6 @@ export type AvailableVariation = {
 	variation_id: number;
 	price_html: string;
 	is_in_stock: boolean;
-	max_cart_qty: number;
 };
 
 export const getMatchedVariation = (

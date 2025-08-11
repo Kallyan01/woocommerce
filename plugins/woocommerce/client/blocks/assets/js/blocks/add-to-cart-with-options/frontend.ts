@@ -21,7 +21,6 @@ import { getProductData } from '../../base/utils/get-product-data';
 export type Context = {
 	productId: number;
 	productType: string;
-	max_cart_qty: number;
 	selectedAttributes: SelectedAttributes[];
 	availableVariations: AvailableVariation[];
 	quantity: Record< number, number >;
@@ -160,9 +159,7 @@ const addToCartWithOptionsStore = store<
 				if ( productType === 'simple' ) {
 					const productObject = getProductData(
 						productId,
-						productType,
-						[],
-						[]
+						productType
 					);
 
 					if ( ! productObject ) {
@@ -171,14 +168,15 @@ const addToCartWithOptionsStore = store<
 
 					const { max: productMaxCartQty } = productObject;
 
-					// Returns form quantity selector component value.
-					const qty = quantity[ productId ];
 					if ( ! productMaxCartQty ) {
 						return true;
 					}
 					const productQty =
 						cartItems.find( ( item ) => item.id === productId )
 							?.quantity || 0;
+
+					// Returns form quantity selector component value.
+					const qty = quantity[ productId ];
 
 					return productMaxCartQty >= qty + productQty;
 				}

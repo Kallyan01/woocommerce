@@ -16,7 +16,6 @@ use Automattic\WooCommerce\Blocks\Utils\BlockTemplateUtils;
  */
 class AddToCartWithOptions extends AbstractBlock {
 
-
 	use EnableBlockJsonAssetsTrait;
 
 	/**
@@ -245,7 +244,7 @@ class AddToCartWithOptions extends AbstractBlock {
 						'attributes'   => $variation->get_variation_attributes(),
 						'is_in_stock'  => $variation->is_in_stock(),
 					);
-					$product_quantity_constraints                = Utils::get_product_quantity_constraints( $variation );
+					$variation_quantity_contraints                = Utils::get_product_quantity_constraints( $variation );
 
 					wp_interactivity_state(
 						'woocommerce',
@@ -254,9 +253,9 @@ class AddToCartWithOptions extends AbstractBlock {
 								$product->get_id() => array(
 									'variations' => array(
 										$variation->get_id() => array(
-											'min'  => $product_quantity_constraints['min'],
-											'max'  => $product_quantity_constraints['max'],
-											'step' => $product_quantity_constraints['step'],
+											'min'  => $variation_quantity_contraints['min'],
+											'max'  => $variation_quantity_contraints['max'],
+											'step' => $variation_quantity_contraints['step'],
 										),
 									),
 								),

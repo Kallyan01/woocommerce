@@ -29,13 +29,14 @@ const { state: wooState } = store< WooCommerce >(
 export const getProductData = (
 	id: number,
 	productType: string,
-	availableVariations: AvailableVariation[],
-	selectedAttributes: SelectedAttributes[]
+	availableVariations?: AvailableVariation[],
+	selectedAttributes?: SelectedAttributes[]
 ): ( ProductData & { id: number } ) | null => {
 	let productId = id;
 	let productData: ProductData | undefined;
 
-	if ( productType === 'variable' ) {
+	// If both the condition satisfies that's a variable product, we need to get the selected variation data.
+	if ( availableVariations && selectedAttributes ) {
 		const matchedVariation = getMatchedVariation(
 			availableVariations,
 			selectedAttributes

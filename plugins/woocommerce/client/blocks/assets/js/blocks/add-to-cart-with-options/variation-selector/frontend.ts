@@ -191,9 +191,6 @@ const { actions, state } = store< VariableProductAddToCartWithOptionsStore >(
 
 				const cartItems = wooState.cart?.items ?? [];
 
-				// Returns form quantity selector component value.
-				const qty = quantity[ id ?? productId ];
-
 				if ( ! productMaxCartQty ) {
 					return true;
 				}
@@ -201,6 +198,9 @@ const { actions, state } = store< VariableProductAddToCartWithOptionsStore >(
 				const variableProductQty =
 					cartItems.find( ( item ) => item.id === id )?.quantity || 0;
 				const maxCartQty = productMaxCartQty || 0;
+
+				// Returns form quantity selector component value.
+				const qty = quantity[ id ?? productId ];
 
 				// Variable products must be in stock and have a selected variation
 				return Boolean(
